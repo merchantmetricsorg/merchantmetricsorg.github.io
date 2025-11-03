@@ -124,6 +124,15 @@ export function calculateAllKpis(allData: SalesDataRow[]): Kpis {
     const previousKpis = calculateKpisForPeriod(previousPeriodData);
     const previousValue = previousKpis[kpiName] as number;
 
+    // If there's no data for the previous period, indicate that no comparison can be made.
+    if (previousPeriodData.length === 0) {
+      return {
+        value: currentValue,
+        period: periodDescription,
+        comparisonPeriod: 'No previous period',
+      };
+    }
+
     let change = 0;
     let isGood = false;
 

@@ -299,6 +299,8 @@
                 {#if kpi.change < 0}▼{/if}
                 {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
               </span>
+            {:else if kpi.comparisonPeriod}
+              <span class="kpi-change">{kpi.comparisonPeriod}</span>
             {/if}
           </div>
         {/each}
