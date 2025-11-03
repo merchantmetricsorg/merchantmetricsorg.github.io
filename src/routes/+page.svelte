@@ -2,6 +2,7 @@
   import CsvUploader from '$lib/components/CsvUploader.svelte';
   import { salesData, setSalesData, clearSalesData, setError } from '$lib/stores/dataStore';
   import { parseCsv } from '$lib/utils/csvParser';
+  import Dashboard from '$lib/components/Dashboard.svelte';
 
   // Sample WooCommerce CSV data for testing
   const wooCommerceSampleCsv = `Date,"Commande n°",État,Client,"Type de client",Produit(s),"Articles vendus","Code(s) promo","Ventes nettes",Attribution
@@ -63,13 +64,7 @@
   {#if $salesData.error}
     <p class="error-message">{$salesData.error}</p>
   {:else if $salesData.parsedData}
-    <div class="data-summary">
-      <h2>Data Loaded: {$salesData.fileName} (Platform: {$salesData.platform || 'Unknown'})</h2>
-      <p>Total Rows: {$salesData.parsedData.length}</p>
-      <!-- Display some basic stats or a table preview here -->
-      <!-- For now, just a placeholder -->
-      <pre>{JSON.stringify($salesData.parsedData[0], null, 2)}</pre>
-    </div>
+    <Dashboard />
   {:else}
     <p>Upload a CSV file or run a test to get started with your e-commerce analytics.</p>
   {/if}
