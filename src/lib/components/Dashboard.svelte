@@ -138,10 +138,20 @@
     if (topProductsChart) {
       topProductsChart.destroy();
     }
+
+    const truncateLabel = (label: string, maxLength: number = 20) => {
+      if (label.length > maxLength) {
+        return label.substring(0, maxLength) + '...';
+      }
+      return label;
+    };
+
+    const truncatedLabels = data.labels.map(label => truncateLabel(label));
+
     topProductsChart = new Chart(topProductsCanvas, {
       type: 'bar',
       data: {
-        labels: data.labels,
+        labels: truncatedLabels,
         datasets: [
           {
             label: 'Top Selling Products',
@@ -173,6 +183,20 @@
             display: true,
             text: 'Top Selling Products',
           },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += data.labels[context.dataIndex] + ' (' + context.parsed.y + ')';
+                }
+                return label;
+              }
+            }
+          }
         },
       },
     });
