@@ -61,6 +61,20 @@
 
   <button on:click={testWooCommerceParsing} class="test-button">Test WooCommerce Parsing</button>
 
+  <section class="platform-import-section">
+    <h2>Import from your platform</h2>
+    <div class="platform-cards">
+      <div class="platform-card">
+        <h3>WooCommerce</h3>
+        <p>Go to Statistics -> orders -> select YTD -> export</p>
+      </div>
+      <div class="platform-card disabled">
+        <h3>Shopify</h3>
+        <p>Coming soon</p>
+      </div>
+    </div>
+  </section>
+
   {#if $salesData.error}
     <p class="error-message">{$salesData.error}</p>
   {:else if $salesData.parsedData}
@@ -127,5 +141,54 @@
     padding: 10px;
     border-radius: 5px;
     overflow-x: auto;
+  }
+
+  .platform-import-section {
+    margin-top: 40px;
+    text-align: center;
+  }
+
+  .platform-import-section h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .platform-cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .platform-card {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    text-align: left;
+  }
+
+  .platform-card h3 {
+    color: #007bff;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .platform-card p {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .platform-card.disabled {
+    opacity: 0.6;
+    background-color: #e9ecef;
+    cursor: not-allowed;
+  }
+
+  .platform-card.disabled h3 {
+    color: #6c757d;
   }
 </style>
