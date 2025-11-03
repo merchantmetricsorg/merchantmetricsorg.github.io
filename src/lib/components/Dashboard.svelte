@@ -333,10 +333,10 @@
   </div>
 
   <div class="charts-container">
-    <div class="chart-card">
+    <div class="chart-card chart-tall">
       <canvas bind:this={salesOverTimeCanvasAll}></canvas>
     </div>
-    <div class="chart-card">
+    <div class="chart-card chart-tall">
       <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
     </div>
     <div class="chart-card">
@@ -350,10 +350,10 @@
       <h3>Order Status Distribution</h3>
       <canvas bind:this={orderStatusCanvas}></canvas>
     </div>
-    <div class="chart-card">
+    <div class="chart-card chart-tall">
       <canvas bind:this={customerTypeCanvasAll}></canvas>
     </div>
-    <div class="chart-card">
+    <div class="chart-card chart-tall">
       <canvas bind:this={customerTypeCanvas30Days}></canvas>
     </div>
     <div class="chart-card">
@@ -425,8 +425,16 @@
     margin-bottom: 20px;
   }
 
+  .chart-tall {
+    min-height: 450px;
+  }
+
   canvas {
-    max-height: 300px; /* Adjust as needed */
+    max-height: 300px; /* Default height for regular charts */
+  }
+
+  .chart-tall canvas {
+    max-height: 400px; /* Increased height for charts that need more space */
   }
 
   .kpi-card p {
