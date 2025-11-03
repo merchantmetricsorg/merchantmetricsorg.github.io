@@ -1,38 +1,42 @@
-# sv
+# Client-Side E-Commerce BI Tool
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This is a SvelteKit project designed to provide client-side business intelligence and data analytics for e-commerce sales data. Users can upload CSV exports from platforms like WooCommerce or Shopify, and the application will visualize the data and offer insights directly in the browser.
 
-## Creating a project
+## Project Status
 
-If you're seeing this, you've probably already done this step. Congrats!
+This project is currently under development. Refer to `PROJECT_PLAN.md` for detailed plans and features.
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Getting Started
 
-# create a new project in my-app
-npx sv create my-app
-```
+To run this project locally:
 
-## Developing
+1.  **Clone the repository:**
+    ```bash
+    git clone [repository-url]
+    cd oneclickintell
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+    Open your browser to `http://localhost:5173` (or the port indicated in your terminal).
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Features (Planned)
 
-```sh
-npm run dev
+*   CSV Upload and Parsing
+*   Interactive Data Visualizations (Charts, Graphs)
+*   Key Performance Indicators (KPIs)
+*   Client-Side Analytics (Aggregations, Trends, Anomaly Detection)
+*   Product Performance Insights
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Contributing
 
-## Building
+More details on contributing will be added as the project progresses.
 
-To create a production version of your app:
+## License
 
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+[License Information]
