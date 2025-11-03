@@ -1,20 +1,49 @@
 import type { SalesDataRow } from '$lib/utils/csvParser';
 
-export interface KpiMetrics {
+export interface Kpi {
+  value: number;
+  period: string;
+  change?: number; // Percentage change from previous period
+  isGood?: boolean; // True if change is positive/good, false if negative/bad
+  comparisonPeriod?: string; // e.g., "vs. previous 30 days"
+}
+
+export interface Kpis {
+  totalRevenue: Kpi[];
+  averageOrderValue: Kpi[];
+  totalOrders: Kpi[];
+  averageItemsPerOrder: Kpi[];
+  repeatCustomerRate: Kpi[];
+  promoCodeUsageRate: Kpi[];
+}
+
+/**
+ * Filters sales data for a specific date range.
+ * @param data An array of SalesDataRow.
+ * @param startDate The start date for filtering (inclusive).
+ * @param endDate The end date for filtering (inclusive).
+ * @returns Filtered sales data.
+ */
+function filterDataByDateRange(data: SalesDataRow[], startDate: Date, endDate: Date): SalesDataRow[] {
+  return data.filter(row => {
+    const orderDate = new Date(row.orderDate);
+    return orderDate >= startDate && orderDate <= endDate;
+  });
+}
+
+/**
+ * Calculates key performance indicators (KPIs) from sales data for a given period.
+ * @param data An array of SalesDataRow.
+ * @returns An object containing total revenue, average order value, total orders, average items per order, repeat customer rate, and promo code usage rate.
+ */
+export function calculateKpisForPeriod(data: SalesDataRow[]): Omit<Kpis, 'totalRevenue' | 'averageOrderValue' | 'totalOrders' | 'averageItemsPerOrder' | 'repeatCustomerRate' | 'promoCodeUsageRate'> & {
   totalRevenue: number;
   averageOrderValue: number;
   totalOrders: number;
   averageItemsPerOrder: number;
   repeatCustomerRate: number;
   promoCodeUsageRate: number;
-}
-
-/**
- * Calculates key performance indicators (KPIs) from sales data.
- * @param data An array of SalesDataRow.
- * @returns An object containing total revenue, average order value, total orders, average items per order, repeat customer rate, and promo code usage rate.
- */
-export function calculateKpis(data: SalesDataRow[]): KpiMetrics {
+} {
   if (!data || data.length === 0) {
     return {
       totalRevenue: 0,
@@ -54,6 +83,90 @@ export function calculateKpis(data: SalesDataRow[]): KpiMetrics {
     averageItemsPerOrder,
     repeatCustomerRate,
     promoCodeUsageRate,
+  };
+}
+
+/**
+ * Calculates all predefined KPIs for various periods with comparisons.
+ * @param allData An array of all SalesDataRow.
+ * @returns An object containing all KPIs with their values, periods, and comparisons.
+ */
+export function calculateAllKpis(allData: SalesDataRow[]): Kpis {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // End of today
+
+  const calculateKpiWithComparison = (
+    data: SalesDataRow[],
+    periodDays: number,
+    kpiName: keyof ReturnType<typeof calculateKpisForPeriod>,
+    isHigherBetter: boolean = true,
+    periodDescription: string
+  ): Kpi => {
+    const endDate = new Date(today);
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - periodDays + 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    const currentPeriodData = filterDataByDateRange(data, startDate, endDate);
+    const currentKpis = calculateKpisForPeriod(currentPeriodData);
+    const currentValue = currentKpis[kpiName] as number;
+
+    // Calculate previous period
+    const prevEndDate = new Date(startDate);
+    prevEndDate.setDate(startDate.getDate() - 1);
+    prevEndDate.setHours(23, 59, 59, 999);
+
+    const prevStartDate = new Date(prevEndDate);
+    prevStartDate.setDate(prevEndDate.getDate() - periodDays + 1);
+    prevStartDate.setHours(0, 0, 0, 0);
+
+    const previousPeriodData = filterDataByDateRange(data, prevStartDate, prevEndDate);
+    const previousKpis = calculateKpisForPeriod(previousPeriodData);
+    const previousValue = previousKpis[kpiName] as number;
+
+    let change = 0;
+    let isGood = false;
+
+    if (previousValue !== 0) {
+      change = ((currentValue - previousValue) / previousValue) * 100;
+      isGood = isHigherBetter ? change >= 0 : change <= 0;
+    } else if (currentValue > 0) {
+      change = 100; // If previous was 0 and current is > 0, it's a 100% increase
+      isGood = isHigherBetter;
+    } else {
+      change = 0;
+      isGood = true; // No change, consider it neutral/good
+    }
+
+    return {
+      value: currentValue,
+      period: periodDescription,
+      change: parseFloat(change.toFixed(2)),
+      isGood: isGood,
+      comparisonPeriod: `vs. previous ${periodDays} days`,
+    };
+  };
+
+  return {
+    totalRevenue: [
+      calculateKpiWithComparison(allData, 30, 'totalRevenue', true, 'Last 30 Days'),
+      calculateKpiWithComparison(allData, 365, 'totalRevenue', true, 'Last 365 Days'),
+    ],
+    averageOrderValue: [
+      calculateKpiWithComparison(allData, 30, 'averageOrderValue', true, 'Last 30 Days'),
+    ],
+    totalOrders: [
+      calculateKpiWithComparison(allData, 30, 'totalOrders', true, 'Last 30 Days'),
+    ],
+    averageItemsPerOrder: [
+      calculateKpiWithComparison(allData, 30, 'averageItemsPerOrder', true, 'Last 30 Days'),
+    ],
+    repeatCustomerRate: [
+      calculateKpiWithComparison(allData, 90, 'repeatCustomerRate', true, 'Last 90 Days'),
+    ],
+    promoCodeUsageRate: [
+      calculateKpiWithComparison(allData, 30, 'promoCodeUsageRate', true, 'Last 30 Days'),
+    ],
   };
 }
 

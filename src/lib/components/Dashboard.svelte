@@ -4,19 +4,16 @@
   import { Chart } from 'chart.js/auto'; // Import Chart from 'chart.js/auto' for automatic registration
   import 'chartjs-adapter-date-fns'; // Import date adapter for Chart.js
   import {
-    calculateKpis,
+    calculateAllKpis,
     prepareSalesOverTimeData,
     prepareTopProductsData,
     prepareOrderStatusData,
-    prepareCustomerTypeData
+    prepareCustomerTypeData,
+    type Kpi,
+    type Kpis
   } from '$lib/utils/analytics';
 
-  let totalRevenue: number = 0;
-  let averageOrderValue: number = 0;
-  let totalOrders: number = 0;
-  let averageItemsPerOrder: number = 0;
-  let repeatCustomerRate: number = 0;
-  let promoCodeUsageRate: number = 0;
+  let kpis: Kpis | null = null;
 
   let salesOverTimeChartAll: Chart | null = null;
   let salesOverTimeChart30Days: Chart | null = null;
@@ -38,16 +35,7 @@
 
   // Reactive block for KPI calculation
   $: if ($salesData.parsedData) {
-    const data = $salesData.parsedData;
-
-    // Calculate KPIs
-    const kpis = calculateKpis(data);
-    totalRevenue = kpis.totalRevenue;
-    averageOrderValue = kpis.averageOrderValue;
-    totalOrders = kpis.totalOrders;
-    averageItemsPerOrder = kpis.averageItemsPerOrder;
-    repeatCustomerRate = kpis.repeatCustomerRate;
-    promoCodeUsageRate = kpis.promoCodeUsageRate;
+    kpis = calculateAllKpis($salesData.parsedData);
   }
 
   // Function to render charts
@@ -294,30 +282,28 @@
   <h2>E-commerce Dashboard</h2>
 
   <div class="kpi-cards">
-    <div class="kpi-card">
-      <h3>Total Revenue</h3>
-      <p>{totalRevenue.toFixed(2)} €</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Average Order Value</h3>
-      <p>{averageOrderValue.toFixed(2)} €</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Total Orders</h3>
-      <p>{totalOrders}</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Avg Items/Order</h3>
-      <p>{averageItemsPerOrder.toFixed(2)}</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Repeat Customer Rate</h3>
-      <p>{repeatCustomerRate.toFixed(2)} %</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Promo Code Usage</h3>
-      <p>{promoCodeUsageRate.toFixed(2)} %</p>
-    </div>
+    {#if kpis}
+      {#each Object.entries(kpis) as [kpiName, kpiArray]}
+        {#each kpiArray as kpi}
+          <div class="kpi-card">
+            <h3>{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
+            <p>
+              {kpi.value.toFixed(2)}
+              {#if kpiName === 'totalRevenue' || kpiName === 'averageOrderValue'}€{/if}
+              {#if kpiName === 'repeatCustomerRate' || kpiName === 'promoCodeUsageRate'}%{/if}
+            </p>
+            <span class="kpi-period">{kpi.period}</span>
+            {#if kpi.change !== undefined && kpi.comparisonPeriod}
+              <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                {#if kpi.change > 0}▲{/if}
+                {#if kpi.change < 0}▼{/if}
+                {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
+              </span>
+            {/if}
+          </div>
+        {/each}
+      {/each}
+    {/if}
   </div>
 
   <div class="charts-container">
@@ -415,5 +401,32 @@
 
   canvas {
     max-height: 300px; /* Adjust as needed */
+  }
+
+  .kpi-card p {
+    font-size: 2em;
+    font-weight: bold;
+    color: #343a40;
+    margin-bottom: 5px;
+  }
+
+  .kpi-period {
+    font-size: 0.9em;
+    color: #6c757d;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .kpi-change {
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+
+  .kpi-change.good {
+    color: #28a745; /* Green for positive change */
+  }
+
+  .kpi-change.bad {
+    color: #dc3545; /* Red for negative change */
   }
 </style>
