@@ -61,20 +61,68 @@ export function calculateKpis(data: SalesDataRow[]): KpiMetrics {
  * Prepares sales data for a "Sales Over Time" chart.
  * Aggregates total sales by date.
  * @param data An array of SalesDataRow.
+ * @param days Optional. The number of past days to include in the data. If not provided, all data is used.
  * @returns An object with labels (dates) and values (total sales for that date).
  */
-export function prepareSalesOverTimeData(data: SalesDataRow[]): { labels: string[]; values: number[] } {
-  const salesByDate: { [date: string]: number } = {};
+export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' = 'day'): { labels: string[]; values: number[] } {
+  if (!data || data.length === 0) {
+    return { labels: [], values: [] };
+  }
 
+  const salesByDate: { [date: string]: number } = {};
   data.forEach(row => {
     const date = new Date(row.orderDate).toISOString().split('T')[0]; // Get YYYY-MM-DD
     salesByDate[date] = (salesByDate[date] || 0) + row.totalSales;
   });
 
-  const sortedDates = Object.keys(salesByDate).sort();
-  const values = sortedDates.map(date => salesByDate[date]);
+  let allDates: string[] = [];
+  let aggregatedSales: { [key: string]: number } = {};
 
-  return { labels: sortedDates, values };
+  const getWeekStart = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().split('T')[0];
+  };
+
+  if (days !== undefined) {
+    const latestDate = data.reduce((maxDate, row) => {
+      const orderDate = new Date(row.orderDate);
+      return orderDate > maxDate ? orderDate : maxDate;
+    }, new Date(0));
+
+    const startDate = new Date(latestDate);
+    startDate.setDate(latestDate.getDate() - (days - 1));
+
+    for (let d = new Date(startDate); d <= latestDate; d.setDate(d.getDate() + 1)) {
+      const dateString = d.toISOString().split('T')[0];
+      allDates.push(dateString);
+    }
+  } else {
+    allDates = Array.from(new Set(data.map(row => new Date(row.orderDate).toISOString().split('T')[0]))).sort();
+  }
+
+  if (grain === 'week') {
+    const uniqueWeeks = new Set<string>();
+    allDates.forEach(dateString => {
+      const weekStart = getWeekStart(new Date(dateString));
+      uniqueWeeks.add(weekStart);
+    });
+    allDates = Array.from(uniqueWeeks).sort();
+
+    Object.entries(salesByDate).forEach(([dateString, sales]) => {
+      const weekStart = getWeekStart(new Date(dateString));
+      aggregatedSales[weekStart] = (aggregatedSales[weekStart] || 0) + sales;
+    });
+  } else {
+    aggregatedSales = salesByDate;
+  }
+
+  const values = allDates.map(date => aggregatedSales[date] || 0);
+
+  return { labels: allDates, values };
 }
 
 /**
@@ -142,15 +190,29 @@ export function prepareOrderStatusData(data: SalesDataRow[]): { labels: string[]
  * Prepares data for a "Sales from New vs. Returning Customers" chart.
  * Aggregates total sales by date, distinguishing between new and returning customers.
  * @param data An array of SalesDataRow.
+ * @param days Optional. The number of past days to include in the data. If not provided, all data is used.
  * @returns An object with labels (dates) and two sets of values (new customer sales, returning customer sales).
  */
-export function prepareCustomerTypeData(data: SalesDataRow[]): { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] } {
+export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' = 'day'): { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] } {
+  if (!data || data.length === 0) {
+    return { labels: [], newCustomerSales: [], returningCustomerSales: [] };
+  }
+
   const salesByDateNew: { [date: string]: number } = {};
   const salesByDateReturning: { [date: string]: number } = {};
   const customerFirstOrderDate: { [customerName: string]: string } = {};
 
-  // First pass: Determine first order date for each customer
-  data.sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime()); // Sort by date
+  const getWeekStart = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().split('T')[0];
+  };
+
+  // Determine first order date for each customer from the entire dataset
+  data.sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime());
   data.forEach(row => {
     if (row.customerName) {
       const date = new Date(row.orderDate).toISOString().split('T')[0];
@@ -160,22 +222,60 @@ export function prepareCustomerTypeData(data: SalesDataRow[]): { labels: string[
     }
   });
 
-  // Second pass: Aggregate sales by customer type and date
+  // Aggregate sales by customer type and date for all data
   data.forEach(row => {
     const date = new Date(row.orderDate).toISOString().split('T')[0];
     if (row.customerName && customerFirstOrderDate[row.customerName] === date) {
-      // New customer
       salesByDateNew[date] = (salesByDateNew[date] || 0) + row.totalSales;
     } else {
-      // Returning customer or no customer name
       salesByDateReturning[date] = (salesByDateReturning[date] || 0) + row.totalSales;
     }
   });
 
-  const allDates = Array.from(new Set([...Object.keys(salesByDateNew), ...Object.keys(salesByDateReturning)])).sort();
+  let allDates: string[] = [];
+  if (days !== undefined) {
+    const latestDate = data.reduce((maxDate, row) => {
+      const orderDate = new Date(row.orderDate);
+      return orderDate > maxDate ? orderDate : maxDate;
+    }, new Date(0));
 
-  const newCustomerSales = allDates.map(date => salesByDateNew[date] || 0);
-  const returningCustomerSales = allDates.map(date => salesByDateReturning[date] || 0);
+    const startDate = new Date(latestDate);
+    startDate.setDate(latestDate.getDate() - (days - 1));
+
+    for (let d = new Date(startDate); d <= latestDate; d.setDate(d.getDate() + 1)) {
+      allDates.push(d.toISOString().split('T')[0]);
+    }
+  } else {
+    allDates = Array.from(new Set([...Object.keys(salesByDateNew), ...Object.keys(salesByDateReturning)])).sort();
+  }
+
+  let aggregatedNewCustomerSales: { [key: string]: number } = {};
+  let aggregatedReturningCustomerSales: { [key: string]: number } = {};
+
+  if (grain === 'week') {
+    const uniqueWeeks = new Set<string>();
+    allDates.forEach(dateString => {
+      const weekStart = getWeekStart(new Date(dateString));
+      uniqueWeeks.add(weekStart);
+    });
+    allDates = Array.from(uniqueWeeks).sort();
+
+    Object.entries(salesByDateNew).forEach(([dateString, sales]) => {
+      const weekStart = getWeekStart(new Date(dateString));
+      aggregatedNewCustomerSales[weekStart] = (aggregatedNewCustomerSales[weekStart] || 0) + sales;
+    });
+
+    Object.entries(salesByDateReturning).forEach(([dateString, sales]) => {
+      const weekStart = getWeekStart(new Date(dateString));
+      aggregatedReturningCustomerSales[weekStart] = (aggregatedReturningCustomerSales[weekStart] || 0) + sales;
+    });
+  } else {
+    aggregatedNewCustomerSales = salesByDateNew;
+    aggregatedReturningCustomerSales = salesByDateReturning;
+  }
+
+  const newCustomerSales = allDates.map(date => aggregatedNewCustomerSales[date] || 0);
+  const returningCustomerSales = allDates.map(date => aggregatedReturningCustomerSales[date] || 0);
 
   return { labels: allDates, newCustomerSales, returningCustomerSales };
 }

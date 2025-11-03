@@ -18,15 +18,23 @@
   let repeatCustomerRate: number = 0;
   let promoCodeUsageRate: number = 0;
 
-  let salesOverTimeChart: Chart | null = null;
+  let salesOverTimeChartAll: Chart | null = null;
+  let salesOverTimeChart30Days: Chart | null = null;
+  let salesOverTimeChart365Days: Chart | null = null;
   let topProductsChart: Chart | null = null;
   let orderStatusChart: Chart | null = null;
-  let customerTypeChart: Chart | null = null;
+  let customerTypeChartAll: Chart | null = null;
+  let customerTypeChart30Days: Chart | null = null;
+  let customerTypeChart365Days: Chart | null = null;
 
-  let salesOverTimeCanvas: HTMLCanvasElement;
+  let salesOverTimeCanvasAll: HTMLCanvasElement;
+  let salesOverTimeCanvas30Days: HTMLCanvasElement;
+  let salesOverTimeCanvas365Days: HTMLCanvasElement;
   let topProductsCanvas: HTMLCanvasElement;
   let orderStatusCanvas: HTMLCanvasElement;
-  let customerTypeCanvas: HTMLCanvasElement;
+  let customerTypeCanvasAll: HTMLCanvasElement;
+  let customerTypeCanvas30Days: HTMLCanvasElement;
+  let customerTypeCanvas365Days: HTMLCanvasElement;
 
   // Reactive block for KPI calculation
   $: if ($salesData.parsedData) {
@@ -44,17 +52,31 @@
 
   // Function to render charts
   function updateCharts() {
-    if ($salesData.parsedData && salesOverTimeCanvas && topProductsCanvas && orderStatusCanvas && customerTypeCanvas) {
+    if ($salesData.parsedData && salesOverTimeCanvasAll && salesOverTimeCanvas30Days && salesOverTimeCanvas365Days && topProductsCanvas && orderStatusCanvas && customerTypeCanvasAll && customerTypeCanvas30Days && customerTypeCanvas365Days) {
       const data = $salesData.parsedData;
-      const salesOverTime = prepareSalesOverTimeData(data);
+
+      // Sales Over Time Charts
+      const salesOverTimeAll = prepareSalesOverTimeData(data, undefined, 'week');
+      const salesOverTime30Days = prepareSalesOverTimeData(data, 30, 'day');
+      const salesOverTime365Days = prepareSalesOverTimeData(data, 365, 'week');
+
+      // Other Charts
       const topProducts = prepareTopProductsData(data);
       const orderStatus = prepareOrderStatusData(data);
-      const customerType = prepareCustomerTypeData(data);
 
-      renderSalesOverTimeChart(salesOverTime);
+      // Customer Type Charts
+      const customerTypeAll = prepareCustomerTypeData(data, undefined, 'week');
+      const customerType30Days = prepareCustomerTypeData(data, 30, 'day');
+      const customerType365Days = prepareCustomerTypeData(data, 365, 'week');
+
+      renderSalesOverTimeChart(salesOverTimeCanvasAll, salesOverTimeAll, 'Sales Over Time (All Time)', salesOverTimeChartAll, 'week');
+      renderSalesOverTimeChart(salesOverTimeCanvas30Days, salesOverTime30Days, 'Sales Over Time (Last 30 Days)', salesOverTimeChart30Days, 'day');
+      renderSalesOverTimeChart(salesOverTimeCanvas365Days, salesOverTime365Days, 'Sales Over Time (Last 365 Days)', salesOverTimeChart365Days, 'week');
       renderTopProductsChart(topProducts);
       renderOrderStatusChart(orderStatus);
-      renderCustomerTypeChart(customerType);
+      renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'week');
+      renderCustomerTypeChart(customerTypeCanvas30Days, customerType30Days, 'Sales by Customer Type (Last 30 Days)', customerTypeChart30Days, 'day');
+      renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'week');
     }
   }
 
@@ -66,17 +88,17 @@
   // Reactively call updateCharts when salesData changes
   $: $salesData.parsedData, updateCharts();
 
-  function renderSalesOverTimeChart(data: { labels: string[]; values: number[] }) {
-    if (salesOverTimeChart) {
-      salesOverTimeChart.destroy();
+  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' = 'day') {
+    if (chartInstance) {
+      chartInstance.destroy();
     }
-    salesOverTimeChart = new Chart(salesOverTimeCanvas, {
+    chartInstance = new Chart(canvas, {
       type: 'line',
       data: {
         labels: data.labels,
         datasets: [
           {
-            label: 'Sales Over Time',
+            label: title,
             data: data.values,
             borderColor: 'rgb(75, 192, 192)',
             tension: 0.1,
@@ -91,7 +113,7 @@
           x: {
             type: 'time',
             time: {
-              unit: 'day',
+              unit: unit,
             },
             title: {
               display: true,
@@ -105,8 +127,23 @@
             },
           },
         },
+        plugins: {
+          title: {
+            display: true,
+            text: title,
+          },
+        },
       },
     });
+
+    // Assign the new chart instance to the correct variable
+    if (title.includes('All Time')) {
+      salesOverTimeChartAll = chartInstance;
+    } else if (title.includes('Last 30 Days')) {
+      salesOverTimeChart30Days = chartInstance;
+    } else if (title.includes('Last 365 Days')) {
+      salesOverTimeChart365Days = chartInstance;
+    }
   }
 
   function renderTopProductsChart(data: { labels: string[]; values: number[] }) {
@@ -143,6 +180,12 @@
             beginAtZero: true,
           },
         },
+        plugins: {
+          title: {
+            display: true,
+            text: 'Top Selling Products',
+          },
+        },
       },
     });
   }
@@ -172,15 +215,21 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Order Status Distribution',
+          },
+        },
       },
     });
   }
 
-  function renderCustomerTypeChart(data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }) {
-    if (customerTypeChart) {
-      customerTypeChart.destroy();
+  function renderCustomerTypeChart(canvas: HTMLCanvasElement, data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' = 'day') {
+    if (chartInstance) {
+      chartInstance.destroy();
     }
-    customerTypeChart = new Chart(customerTypeCanvas, {
+    chartInstance = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: data.labels,
@@ -205,7 +254,7 @@
             stacked: true,
             type: 'time',
             time: {
-              unit: 'day',
+              unit: unit,
             },
             title: {
               display: true,
@@ -221,8 +270,23 @@
             beginAtZero: true,
           },
         },
+        plugins: {
+          title: {
+            display: true,
+            text: title,
+          },
+        },
       },
     });
+
+    // Assign the new chart instance to the correct variable
+    if (title.includes('All Time')) {
+      customerTypeChartAll = chartInstance;
+    } else if (title.includes('Last 30 Days')) {
+      customerTypeChart30Days = chartInstance;
+    } else if (title.includes('Last 365 Days')) {
+      customerTypeChart365Days = chartInstance;
+    }
   }
 </script>
 
@@ -258,8 +322,13 @@
 
   <div class="charts-container">
     <div class="chart-card">
-      <h3>Sales Over Time</h3>
-      <canvas bind:this={salesOverTimeCanvas}></canvas>
+      <canvas bind:this={salesOverTimeCanvasAll}></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas bind:this={salesOverTimeCanvas365Days}></canvas>
     </div>
     <div class="chart-card">
       <h3>Top Selling Products</h3>
@@ -270,8 +339,13 @@
       <canvas bind:this={orderStatusCanvas}></canvas>
     </div>
     <div class="chart-card">
-      <h3>Sales by Customer Type</h3>
-      <canvas bind:this={customerTypeCanvas}></canvas>
+      <canvas bind:this={customerTypeCanvasAll}></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas bind:this={customerTypeCanvas30Days}></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas bind:this={customerTypeCanvas365Days}></canvas>
     </div>
   </div>
 </div>
