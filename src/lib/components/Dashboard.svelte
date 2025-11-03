@@ -3,16 +3,30 @@
   import { onMount } from 'svelte';
   import { Chart } from 'chart.js/auto'; // Import Chart from 'chart.js/auto' for automatic registration
   import 'chartjs-adapter-date-fns'; // Import date adapter for Chart.js
-  import { calculateKpis, prepareSalesOverTimeData, prepareTopProductsData } from '$lib/utils/analytics';
+  import {
+    calculateKpis,
+    prepareSalesOverTimeData,
+    prepareTopProductsData,
+    prepareOrderStatusData,
+    prepareCustomerTypeData
+  } from '$lib/utils/analytics';
 
   let totalRevenue: number = 0;
   let averageOrderValue: number = 0;
   let totalOrders: number = 0;
+  let averageItemsPerOrder: number = 0;
+  let repeatCustomerRate: number = 0;
+  let promoCodeUsageRate: number = 0;
+
   let salesOverTimeChart: Chart | null = null;
   let topProductsChart: Chart | null = null;
+  let orderStatusChart: Chart | null = null;
+  let customerTypeChart: Chart | null = null;
 
   let salesOverTimeCanvas: HTMLCanvasElement;
   let topProductsCanvas: HTMLCanvasElement;
+  let orderStatusCanvas: HTMLCanvasElement;
+  let customerTypeCanvas: HTMLCanvasElement;
 
   // Reactive block for KPI calculation
   $: if ($salesData.parsedData) {
@@ -23,16 +37,24 @@
     totalRevenue = kpis.totalRevenue;
     averageOrderValue = kpis.averageOrderValue;
     totalOrders = kpis.totalOrders;
+    averageItemsPerOrder = kpis.averageItemsPerOrder;
+    repeatCustomerRate = kpis.repeatCustomerRate;
+    promoCodeUsageRate = kpis.promoCodeUsageRate;
   }
 
   // Function to render charts
   function updateCharts() {
-    if ($salesData.parsedData && salesOverTimeCanvas && topProductsCanvas) {
+    if ($salesData.parsedData && salesOverTimeCanvas && topProductsCanvas && orderStatusCanvas && customerTypeCanvas) {
       const data = $salesData.parsedData;
       const salesOverTime = prepareSalesOverTimeData(data);
       const topProducts = prepareTopProductsData(data);
+      const orderStatus = prepareOrderStatusData(data);
+      const customerType = prepareCustomerTypeData(data);
+
       renderSalesOverTimeChart(salesOverTime);
       renderTopProductsChart(topProducts);
+      renderOrderStatusChart(orderStatus);
+      renderCustomerTypeChart(customerType);
     }
   }
 
@@ -124,6 +146,84 @@
       },
     });
   }
+
+  function renderOrderStatusChart(data: { labels: string[]; values: number[] }) {
+    if (orderStatusChart) {
+      orderStatusChart.destroy();
+    }
+    orderStatusChart = new Chart(orderStatusCanvas, {
+      type: 'pie',
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: 'Order Status',
+            data: data.values,
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(54, 162, 235, 0.6)',
+              'rgba(255, 206, 86, 0.6)',
+              'rgba(75, 192, 192, 0.6)',
+              'rgba(153, 102, 255, 0.6)',
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }
+
+  function renderCustomerTypeChart(data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }) {
+    if (customerTypeChart) {
+      customerTypeChart.destroy();
+    }
+    customerTypeChart = new Chart(customerTypeCanvas, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: 'New Customer Sales',
+            data: data.newCustomerSales,
+            backgroundColor: 'rgba(255, 159, 64, 0.6)',
+          },
+          {
+            label: 'Returning Customer Sales',
+            data: data.returningCustomerSales,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            type: 'time',
+            time: {
+              unit: 'day',
+            },
+            title: {
+              display: true,
+              text: 'Date',
+            },
+          },
+          y: {
+            stacked: true,
+            title: {
+              display: true,
+              text: 'Revenue',
+            },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
 </script>
 
 <div class="dashboard">
@@ -142,6 +242,18 @@
       <h3>Total Orders</h3>
       <p>{totalOrders}</p>
     </div>
+    <div class="kpi-card">
+      <h3>Avg Items/Order</h3>
+      <p>{averageItemsPerOrder.toFixed(2)}</p>
+    </div>
+    <div class="kpi-card">
+      <h3>Repeat Customer Rate</h3>
+      <p>{repeatCustomerRate.toFixed(2)} %</p>
+    </div>
+    <div class="kpi-card">
+      <h3>Promo Code Usage</h3>
+      <p>{promoCodeUsageRate.toFixed(2)} %</p>
+    </div>
   </div>
 
   <div class="charts-container">
@@ -152,6 +264,14 @@
     <div class="chart-card">
       <h3>Top Selling Products</h3>
       <canvas bind:this={topProductsCanvas}></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Order Status Distribution</h3>
+      <canvas bind:this={orderStatusCanvas}></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Sales by Customer Type</h3>
+      <canvas bind:this={customerTypeCanvas}></canvas>
     </div>
   </div>
 </div>
@@ -172,11 +292,10 @@
   }
 
   .kpi-cards {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 40px;
-    flex-wrap: wrap;
   }
 
   .kpi-card {
