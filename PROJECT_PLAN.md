@@ -14,9 +14,9 @@ To create a fast, secure, and user-friendly web application that empowers e-comm
 
 Here is a breakdown of the key features we'll need to build:
 
-*   **CSV Data Uploader:** An interface for users to upload their sales/order CSV files. We should aim to support formats from major platforms.
-*   **Data Parser & Normalizer:** A robust module to parse the CSV data and transform it into a consistent internal format, handling potential variations between platforms.
-*   **Interactive Dashboard:** A central view with key metrics and visualizations.
+* DONE  **CSV Data Uploader:** An interface for users to upload their sales/order CSV files. We should aim to support formats from major platforms.
+* DONE  **Data Parser & Normalizer:** A robust module to parse the CSV data and transform it into a consistent internal format, handling potential variations between platforms.
+* DONE  **Interactive Dashboard:** A central view with key metrics and visualizations.
     *   **Charts & Graphs:** Visual representations of sales over time, top-selling products, revenue trends, etc.
     *   **Key Performance Indicators (KPIs):** Displaying important metrics like total revenue, average order value, and number of orders.
 *   **Client-Side Analytics Engine:**
