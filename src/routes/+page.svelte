@@ -50,6 +50,23 @@
 </svelte:head>
 
 <div class="container">
+  <section class="features-section">
+    <div class="feature-cards">
+      <div class="feature-card">
+        <h3>One-Click Business Intelligence</h3>
+        <p>Gain instant insights with KPIs, charts, trends, anomaly detection, and product performance analytics.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Private & Client-Side</h3>
+        <p>Your sensitive order data never leaves your browser, ensuring complete privacy and security.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Open-Source & Free</h3>
+        <p>Leverage a powerful, community-driven tool at no cost, with full transparency and extensibility.</p>
+      </div>
+    </div>
+  </section>
+
   <h1>E-commerce BI Dashboard</h1>
 
   <CsvUploader on:csvUploaded={handleCsvUpload} on:csvCleared={handleCsvCleared} />
@@ -190,5 +207,46 @@
 
   .platform-card.disabled h3 {
     color: #6c757d;
+  }
+
+  .features-section {
+    margin-top: 20px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .feature-cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .feature-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 25px;
+    width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .feature-card h3 {
+    color: #007bff;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+  }
+
+  .feature-card p {
+    color: #555;
+    font-size: 1em;
+    line-height: 1.6;
   }
 </style>
