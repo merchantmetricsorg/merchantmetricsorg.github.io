@@ -227,7 +227,7 @@ export function calculateAllKpis(allData: SalesDataRow[]): Kpis {
  * @param days Optional. The number of past days to include in the data. If not provided, all data is used.
  * @returns An object with labels (dates), values (total sales for that date), and movingAverage (7-period moving average).
  */
-export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' = 'day'): { labels: string[]; values: number[]; movingAverage: (number | null)[] } {
+export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' | 'month' = 'day'): { labels: string[]; values: number[]; movingAverage: (number | null)[] } {
   if (!data || data.length === 0) {
     return { labels: [], values: [], movingAverage: [] };
   }
@@ -248,6 +248,13 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
     d.setDate(diff);
     d.setHours(0, 0, 0, 0);
     return d.toISOString().split('T')[0];
+  };
+
+  const getMonthStart = (date: Date) => {
+    const d = new Date(date);
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().split('T')[0].substring(0, 7); // YYYY-MM
   };
 
   if (days !== undefined) {
@@ -289,12 +296,24 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
       const weekStart = getWeekStart(new Date(dateString));
       aggregatedSales[weekStart] = (aggregatedSales[weekStart] || 0) + sales;
     });
+  } else if (grain === 'month') {
+    const uniqueMonths = new Set<string>();
+    allDates.forEach(dateString => {
+      const monthStart = getMonthStart(new Date(dateString));
+      uniqueMonths.add(monthStart);
+    });
+    allDates = Array.from(uniqueMonths).sort();
+
+    Object.entries(salesByDate).forEach(([dateString, sales]) => {
+      const monthStart = getMonthStart(new Date(dateString));
+      aggregatedSales[monthStart] = (aggregatedSales[monthStart] || 0) + sales;
+    });
   } else {
     aggregatedSales = salesByDate;
   }
 
   const values = allDates.map(date => aggregatedSales[date] || 0);
-  const movingAverage = calculateMovingAverage(values, 7); // Calculate 7-period moving average
+  const movingAverage = calculateMovingAverage(values, grain === 'month' ? 3 : 7); // 3-month moving average for month, 7-period for others
 
   return { labels: allDates, values, movingAverage };
 }
@@ -541,7 +560,7 @@ export function prepareOrderStatusData(data: SalesDataRow[]): { labels: string[]
  * @param days Optional. The number of past days to include in the data. If not provided, all data is used.
  * @returns An object with labels (dates) and two sets of values (new customer sales, returning customer sales).
  */
-export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' = 'day'): { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] } {
+export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' | 'month' = 'day'): { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] } {
   if (!data || data.length === 0) {
     return { labels: [], newCustomerSales: [], returningCustomerSales: [] };
   }
@@ -557,6 +576,13 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
     d.setDate(diff);
     d.setHours(0, 0, 0, 0);
     return d.toISOString().split('T')[0];
+  };
+
+  const getMonthStart = (date: Date) => {
+    const d = new Date(date);
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString().split('T')[0].substring(0, 7); // YYYY-MM
   };
 
   // Determine first order date for each customer from the entire dataset
@@ -616,6 +642,23 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
     Object.entries(salesByDateReturning).forEach(([dateString, sales]) => {
       const weekStart = getWeekStart(new Date(dateString));
       aggregatedReturningCustomerSales[weekStart] = (aggregatedReturningCustomerSales[weekStart] || 0) + sales;
+    });
+  } else if (grain === 'month') {
+    const uniqueMonths = new Set<string>();
+    allDates.forEach(dateString => {
+      const monthStart = getMonthStart(new Date(dateString));
+      uniqueMonths.add(monthStart);
+    });
+    allDates = Array.from(uniqueMonths).sort();
+
+    Object.entries(salesByDateNew).forEach(([dateString, sales]) => {
+      const monthStart = getMonthStart(new Date(dateString));
+      aggregatedNewCustomerSales[monthStart] = (aggregatedNewCustomerSales[monthStart] || 0) + sales;
+    });
+
+    Object.entries(salesByDateReturning).forEach(([dateString, sales]) => {
+      const monthStart = getMonthStart(new Date(dateString));
+      aggregatedReturningCustomerSales[monthStart] = (aggregatedReturningCustomerSales[monthStart] || 0) + sales;
     });
   } else {
     aggregatedNewCustomerSales = salesByDateNew;

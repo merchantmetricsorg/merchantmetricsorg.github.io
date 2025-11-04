@@ -52,7 +52,7 @@
       const data = $salesData.parsedData;
 
       // Sales Over Time Charts
-      const salesOverTimeAll = prepareSalesOverTimeData(data, undefined, 'week');
+      const salesOverTimeAll = prepareSalesOverTimeData(data, undefined, 'month');
       const salesOverTime30Days = prepareSalesOverTimeData(data, 30, 'day');
       const salesOverTime365Days = prepareSalesOverTimeData(data, 365, 'week');
 
@@ -61,16 +61,16 @@
       const orderStatus = prepareOrderStatusData(data);
 
       // Customer Type Charts
-      const customerTypeAll = prepareCustomerTypeData(data, undefined, 'week');
+      const customerTypeAll = prepareCustomerTypeData(data, undefined, 'month');
       const customerType30Days = prepareCustomerTypeData(data, 30, 'day');
       const customerType365Days = prepareCustomerTypeData(data, 365, 'week');
 
-      renderSalesOverTimeChart(salesOverTimeCanvasAll, salesOverTimeAll, 'Sales Over Time (All Time)', salesOverTimeChartAll, 'week');
+      renderSalesOverTimeChart(salesOverTimeCanvasAll, salesOverTimeAll, 'Sales Over Time (All Time)', salesOverTimeChartAll, 'month');
       renderSalesOverTimeChart(salesOverTimeCanvas30Days, salesOverTime30Days, 'Sales Over Time (Last 30 Days)', salesOverTimeChart30Days, 'day');
       renderSalesOverTimeChart(salesOverTimeCanvas365Days, salesOverTime365Days, 'Sales Over Time (Last 365 Days)', salesOverTimeChart365Days, 'week');
       renderTopProductsChart(topProducts);
       renderOrderStatusChart(orderStatus);
-      renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'week');
+      renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'month');
       renderCustomerTypeChart(customerTypeCanvas30Days, customerType30Days, 'Sales by Customer Type (Last 30 Days)', customerTypeChart30Days, 'day');
       renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'week');
     }
@@ -84,7 +84,7 @@
   // Reactively call updateCharts when salesData changes
   $: $salesData.parsedData, updateCharts();
 
-  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[]; movingAverage: (number | null)[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' = 'day') {
+  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[]; movingAverage: (number | null)[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' | 'month' = 'day') {
     if (chartInstance) {
       chartInstance.destroy();
     }
@@ -101,7 +101,7 @@
             fill: false,
           },
           {
-            label: '7-Period Moving Average',
+            label: unit === 'month' ? '3-Month Moving Average' : '7-Period Moving Average',
             data: data.movingAverage,
             borderColor: 'rgb(255, 99, 132)',
             borderDash: [5, 5],
@@ -118,6 +118,7 @@
             type: 'time',
             time: {
               unit: unit,
+              tooltipFormat: unit === 'month' ? 'MMM yyyy' : undefined,
             },
             title: {
               display: true,
@@ -253,7 +254,7 @@
     });
   }
 
-  function renderCustomerTypeChart(canvas: HTMLCanvasElement, data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' = 'day') {
+  function renderCustomerTypeChart(canvas: HTMLCanvasElement, data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' | 'month' = 'day') {
     if (chartInstance) {
       chartInstance.destroy();
     }
@@ -283,6 +284,7 @@
             type: 'time',
             time: {
               unit: unit,
+              tooltipFormat: unit === 'month' ? 'MMM yyyy' : undefined,
             },
             title: {
               display: true,
