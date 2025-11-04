@@ -3,12 +3,7 @@
   import { salesData, setSalesData, clearSalesData, setError } from '$lib/stores/dataStore';
   import { parseCsv } from '$lib/utils/csvParser';
   import Dashboard from '$lib/components/Dashboard.svelte';
-
-  // Sample WooCommerce CSV data for testing
-  const wooCommerceSampleCsv = `Date,"Commande n°",État,Client,"Type de client",Produit(s),"Articles vendus","Code(s) promo","Ventes nettes",Attribution
-2023-01-01,"#1001",Completed,John Doe,Guest,"Product A x 1, Product B x 2",3,"NONE",150.00,Direct
-2023-01-02,"#1002",Processing,Jane Smith,Customer,"Product C x 1",1,"WELCOME10",50.00,Organic
-2023-01-03,"#1003",Completed,John Doe,Guest,"Product A x 1",1,"NONE",75.00,Direct`;
+  import { wooCommerceSampleCsv } from '$lib/data/wooCommerceSample';
 
   async function handleCsvUpload(event: CustomEvent<string>) {
     const csvString = event.detail;
