@@ -49,7 +49,9 @@
   <meta name="description" content="Client-side e-commerce business intelligence and analytics" />
 </svelte:head>
 
+
 <div class="container">
+  <h1>E-commerce BI Dashboard</h1>
   <section class="features-section">
     <div class="feature-cards">
       <div class="feature-card">
@@ -66,8 +68,6 @@
       </div>
     </div>
   </section>
-
-  <h1>E-commerce BI Dashboard</h1>
 
   <CsvUploader on:csvUploaded={handleCsvUpload} on:csvCleared={handleCsvCleared} />
 
@@ -103,10 +103,20 @@
 
 <style>
   .container {
-    max-width: 960px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 20px;
-    font-family: sans-serif;
+    padding: 20px 15px; /* Adjusted padding */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f4f7f6; /* Light background for the page */
+    border-radius: 8px;
+  }
+
+  h1 {
+    color: #2c3e50; /* Darker, professional color */
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    font-weight: 700;
   }
 
   h1 {
@@ -178,25 +188,26 @@
   }
 
   .platform-card {
-    background-color: #f9f9f9;
-    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
-    padding: 20px;
+    padding: 15px;
     width: 300px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     text-align: left;
   }
 
   .platform-card h3 {
-    color: #007bff;
+    color: #34495e;
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    font-size: 1.1em;
   }
 
   .platform-card p {
-    color: #555;
-    font-size: 14px;
-    line-height: 1.5;
+    color: #7f8c8d;
+    font-size: 0.85em;
+    line-height: 1.4;
   }
 
   .platform-card.disabled {
@@ -224,11 +235,11 @@
 
   .feature-card {
     background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 25px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
     width: 300px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     text-align: center;
     transition: transform 0.2s ease-in-out;
   }
@@ -238,15 +249,15 @@
   }
 
   .feature-card h3 {
-    color: #007bff;
+    color: #34495e; /* Professional blue-grey */
     margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.4em;
+    margin-bottom: 10px;
+    font-size: 1.2em;
   }
 
   .feature-card p {
-    color: #555;
-    font-size: 1em;
-    line-height: 1.6;
+    color: #7f8c8d; /* Softer grey */
+    font-size: 0.9em;
+    line-height: 1.5;
   }
 </style>

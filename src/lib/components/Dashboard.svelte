@@ -408,60 +408,65 @@
 
 <style>
   .dashboard {
-    padding: 20px;
-    background-color: #f8f9fa;
+    padding: 15px; /* Reduced padding */
+    background-color: #ffffff; /* Lighter background */
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     margin-top: 20px;
   }
 
   .dashboard h2 {
     text-align: center;
-    color: #343a40;
-    margin-bottom: 30px;
+    color: #2c3e50; /* Darker, professional color */
+    margin-bottom: 25px;
+    font-size: 2em;
+    font-weight: 600;
   }
 
   .kpi-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Slightly smaller min-width */
+    gap: 15px; /* Reduced gap */
+    margin-bottom: 30px; /* Reduced margin */
   }
 
   .kpi-card {
-    background-color: #ffffff;
-    padding: 20px;
+    background-color: #fdfdfd; /* Slightly off-white */
+    padding: 15px; /* Reduced padding */
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef; /* Subtle border */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     text-align: center;
     flex: 1;
-    min-width: 200px;
+    min-width: 180px;
   }
 
   .kpi-card h3 {
-    color: #007bff;
-    margin-bottom: 10px;
-    font-size: 1.2em;
+    color: #34495e; /* Professional blue-grey */
+    margin-bottom: 8px;
+    font-size: 1.1em;
   }
 
   .kpi-card p {
-    font-size: 2em;
+    font-size: 1.8em; /* Slightly smaller font */
     font-weight: bold;
-    color: #343a40;
+    color: #2c3e50; /* Darker color */
+    margin-bottom: 5px;
   }
 
   .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Adjusted min-width */
+    gap: 20px; /* Reduced gap */
   }
 
   .chart-card {
-    background-color: #ffffff;
-    padding: 20px;
+    background-color: #fdfdfd; /* Slightly off-white */
+    padding: 15px; /* Reduced padding */
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    min-height: 400px; /* Consistent height for all charts */
+    border: 1px solid #e9ecef; /* Subtle border */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    min-height: 380px; /* Slightly reduced height */
     position: relative;
   }
 
@@ -472,7 +477,7 @@
   }
 
   canvas {
-    max-height: 350px; /* Adjusted max-height for consistent appearance */
+    max-height: 330px; /* Adjusted max-height */
     height: 100%; /* Ensure canvas fills the container */
   }
 
@@ -484,17 +489,19 @@
   }
 
   .product-insights {
-    background-color: #ffffff;
-    padding: 20px;
+    background-color: #fdfdfd;
+    padding: 15px;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    margin-bottom: 40px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    margin-bottom: 30px;
   }
 
   .product-insights h3 {
     text-align: center;
-    color: #007bff;
-    margin-bottom: 20px;
+    color: #34495e;
+    margin-bottom: 15px;
+    font-size: 1.2em;
   }
 
   .product-insights ul {
@@ -503,11 +510,11 @@
   }
 
   .product-insights li {
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    font-size: 0.95em;
-    line-height: 1.4;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    line-height: 1.3;
   }
 
   .insight-item.insight-positive {
@@ -529,17 +536,19 @@
   }
 
   .sales-anomalies {
-    background-color: #ffffff;
-    padding: 20px;
+    background-color: #fdfdfd;
+    padding: 15px;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    margin-bottom: 40px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    margin-bottom: 30px;
   }
 
   .sales-anomalies h3 {
     text-align: center;
-    color: #007bff;
-    margin-bottom: 20px;
+    color: #34495e;
+    margin-bottom: 15px;
+    font-size: 1.2em;
   }
 
   .sales-anomalies ul {
@@ -548,11 +557,11 @@
   }
 
   .sales-anomalies li {
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    font-size: 0.95em;
-    line-height: 1.4;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    line-height: 1.3;
   }
 
   .anomaly-item.anomaly-spike {
