@@ -54,7 +54,7 @@
       // Sales Over Time Charts
       const salesOverTimeAll = prepareSalesOverTimeData(data, undefined, 'month');
       const salesOverTime30Days = prepareSalesOverTimeData(data, 30, 'day');
-      const salesOverTime365Days = prepareSalesOverTimeData(data, 365, 'week');
+      const salesOverTime365Days = prepareSalesOverTimeData(data, 365, 'month');
 
       // Other Charts
       const topProducts = prepareTopProductsData(data);
@@ -63,16 +63,16 @@
       // Customer Type Charts
       const customerTypeAll = prepareCustomerTypeData(data, undefined, 'month');
       const customerType30Days = prepareCustomerTypeData(data, 30, 'day');
-      const customerType365Days = prepareCustomerTypeData(data, 365, 'week');
+      const customerType365Days = prepareCustomerTypeData(data, 365, 'month');
 
       renderSalesOverTimeChart(salesOverTimeCanvasAll, salesOverTimeAll, 'Sales Over Time (All Time)', salesOverTimeChartAll, 'month');
       renderSalesOverTimeChart(salesOverTimeCanvas30Days, salesOverTime30Days, 'Sales Over Time (Last 30 Days)', salesOverTimeChart30Days, 'day');
-      renderSalesOverTimeChart(salesOverTimeCanvas365Days, salesOverTime365Days, 'Sales Over Time (Last 365 Days)', salesOverTimeChart365Days, 'week');
+      renderSalesOverTimeChart(salesOverTimeCanvas365Days, salesOverTime365Days, 'Sales Over Time (Last 365 Days)', salesOverTimeChart365Days, 'month');
       renderTopProductsChart(topProducts);
       renderOrderStatusChart(orderStatus);
       renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'month');
       renderCustomerTypeChart(customerTypeCanvas30Days, customerType30Days, 'Sales by Customer Type (Last 30 Days)', customerTypeChart30Days, 'day');
-      renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'week');
+      renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'month');
     }
   }
 
