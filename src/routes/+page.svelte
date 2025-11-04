@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import CsvUploader from '$lib/components/CsvUploader.svelte';
   import { salesData, setSalesData, clearSalesData, setError } from '$lib/stores/dataStore';
   import { parseCsv } from '$lib/utils/csvParser';
@@ -42,6 +44,13 @@
     console.log('Testing WooCommerce CSV parsing...');
     await processCsv(wooCommerceSampleCsv, 'woocommerce_test.csv');
   }
+
+  onMount(() => {
+    const urlParams = new URLSearchParams($page.url.search);
+    if (urlParams.has('sample')) {
+      testWooCommerceParsing();
+    }
+  });
 </script>
 
 <svelte:head>
@@ -69,10 +78,6 @@
     </div>
   </section>
 
-  <CsvUploader on:csvUploaded={handleCsvUpload} on:csvCleared={handleCsvCleared} />
-
-  <button on:click={testWooCommerceParsing} class="test-button">Test WooCommerce Parsing</button>
-
   <section class="platform-import-section">
     <h2>Import from your platform</h2>
     <div class="platform-cards">
@@ -91,6 +96,13 @@
       </div>
     </div>
   </section>
+
+  <br />
+
+  <CsvUploader on:csvUploaded={handleCsvUpload} on:csvCleared={handleCsvCleared} />
+
+  <button on:click={testWooCommerceParsing} class="test-button">Test WooCommerce Parsing</button>
+
 
   {#if $salesData.error}
     <p class="error-message">{$salesData.error}</p>
