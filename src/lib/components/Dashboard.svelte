@@ -9,11 +9,17 @@
     prepareTopProductsData,
     prepareOrderStatusData,
     prepareCustomerTypeData,
+    generateProductPerformanceInsights,
+    detectSalesAnomalies,
     type Kpi,
-    type Kpis
+    type Kpis,
+    type ProductInsight,
+    type Anomaly
   } from '$lib/utils/analytics';
 
   let kpis: Kpis | null = null;
+  let productInsights: ProductInsight[] = [];
+  let salesAnomalies: Anomaly[] = [];
 
   let salesOverTimeChartAll: Chart | null = null;
   let salesOverTimeChart30Days: Chart | null = null;
@@ -33,9 +39,11 @@
   let customerTypeCanvas30Days: HTMLCanvasElement;
   let customerTypeCanvas365Days: HTMLCanvasElement;
 
-  // Reactive block for KPI calculation
+  // Reactive block for KPI calculation, product insights, and anomaly detection
   $: if ($salesData.parsedData) {
     kpis = calculateAllKpis($salesData.parsedData);
+    productInsights = generateProductPerformanceInsights($salesData.parsedData);
+    salesAnomalies = detectSalesAnomalies($salesData.parsedData);
   }
 
   // Function to render charts
@@ -76,7 +84,7 @@
   // Reactively call updateCharts when salesData changes
   $: $salesData.parsedData, updateCharts();
 
-  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' = 'day') {
+  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[]; movingAverage: (number | null)[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' = 'day') {
     if (chartInstance) {
       chartInstance.destroy();
     }
@@ -86,9 +94,17 @@
         labels: data.labels,
         datasets: [
           {
-            label: title,
+            label: 'Total Sales',
             data: data.values,
             borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1,
+            fill: false,
+          },
+          {
+            label: '7-Period Moving Average',
+            data: data.movingAverage,
+            borderColor: 'rgb(255, 99, 132)',
+            borderDash: [5, 5],
             tension: 0.1,
             fill: false,
           },
@@ -305,6 +321,36 @@
 <div class="dashboard">
   <h2>E-commerce Dashboard</h2>
 
+  <div class="product-insights">
+    <h3>Product Performance Insights (Last 30 Days)</h3>
+    {#if productInsights.length > 0}
+      <ul>
+        {#each productInsights as insight}
+          <li class="insight-item insight-{insight.type}">
+            {insight.insight}
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p>No product insights available for the last 30 days.</p>
+    {/if}
+  </div>
+
+  <div class="sales-anomalies">
+    <h3>Sales Anomaly Detection (Last 90 Days)</h3>
+    {#if salesAnomalies.length > 0}
+      <ul>
+        {#each salesAnomalies as anomaly}
+          <li class="anomaly-item anomaly-{anomaly.type}">
+            {anomaly.message}
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p>No significant sales anomalies detected in the last 90 days.</p>
+    {/if}
+  </div>
+
   <div class="kpi-cards">
     {#if kpis}
       {#each Object.entries(kpis) as [kpiName, kpiArray]}
@@ -442,6 +488,90 @@
     font-weight: bold;
     color: #343a40;
     margin-bottom: 5px;
+  }
+
+  .product-insights {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+  }
+
+  .product-insights h3 {
+    text-align: center;
+    color: #007bff;
+    margin-bottom: 20px;
+  }
+
+  .product-insights ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .product-insights li {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+
+  .insight-item.insight-positive {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .insight-item.insight-negative {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  .insight-item.insight-neutral {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+  }
+
+  .sales-anomalies {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+  }
+
+  .sales-anomalies h3 {
+    text-align: center;
+    color: #007bff;
+    margin-bottom: 20px;
+  }
+
+  .sales-anomalies ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sales-anomalies li {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+
+  .anomaly-item.anomaly-spike {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .anomaly-item.anomaly-drop {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
   }
 
   .kpi-period {

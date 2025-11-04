@@ -17,6 +17,47 @@ export interface Kpis {
   promoCodeUsageRate: Kpi[];
 }
 
+export interface ProductInsight {
+  productName: string;
+  insight: string;
+  type: 'positive' | 'negative' | 'neutral';
+}
+
+export interface Anomaly {
+  date: string;
+  value: number;
+  type: 'spike' | 'drop';
+  message: string;
+}
+
+/**
+ * Calculates the simple moving average for a given array of numbers.
+ * @param data The array of numbers to calculate the moving average for.
+ * @param windowSize The size of the moving average window.
+ * @returns An array containing the moving average values.
+ */
+function calculateMovingAverage(data: number[], windowSize: number): (number | null)[] {
+  if (windowSize <= 0) {
+    throw new Error("Window size must be a positive integer.");
+  }
+  if (windowSize > data.length) {
+    // If windowSize is larger than data length, return an array of nulls
+    return new Array(data.length).fill(null);
+  }
+
+  const movingAverages: (number | null)[] = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < windowSize - 1) {
+      movingAverages.push(null); // Not enough data points to calculate moving average
+    } else {
+      const window = data.slice(i - windowSize + 1, i + 1);
+      const sum = window.reduce((acc, val) => acc + val, 0);
+      movingAverages.push(sum / windowSize);
+    }
+  }
+  return movingAverages;
+}
+
 /**
  * Filters sales data for a specific date range.
  * @param data An array of SalesDataRow.
@@ -184,11 +225,11 @@ export function calculateAllKpis(allData: SalesDataRow[]): Kpis {
  * Aggregates total sales by date.
  * @param data An array of SalesDataRow.
  * @param days Optional. The number of past days to include in the data. If not provided, all data is used.
- * @returns An object with labels (dates) and values (total sales for that date).
+ * @returns An object with labels (dates), values (total sales for that date), and movingAverage (7-period moving average).
  */
-export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' = 'day'): { labels: string[]; values: number[] } {
+export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, grain: 'day' | 'week' = 'day'): { labels: string[]; values: number[]; movingAverage: (number | null)[] } {
   if (!data || data.length === 0) {
-    return { labels: [], values: [] };
+    return { labels: [], values: [], movingAverage: [] };
   }
 
   const salesByDate: { [date: string]: number } = {};
@@ -223,7 +264,17 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
       allDates.push(dateString);
     }
   } else {
-    allDates = Array.from(new Set(data.map(row => new Date(row.orderDate).toISOString().split('T')[0]))).sort();
+    // For 'All Time' data, generate a continuous range of dates from the earliest to the latest order date
+    const allOrderDates = data.map(row => new Date(row.orderDate));
+    const minDate = new Date(Math.min(...allOrderDates.map(date => date.getTime())));
+    const maxDate = new Date(Math.max(...allOrderDates.map(date => date.getTime())));
+
+    minDate.setHours(0, 0, 0, 0);
+    maxDate.setHours(0, 0, 0, 0);
+
+    for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
+      allDates.push(d.toISOString().split('T')[0]);
+    }
   }
 
   if (grain === 'week') {
@@ -243,8 +294,183 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
   }
 
   const values = allDates.map(date => aggregatedSales[date] || 0);
+  const movingAverage = calculateMovingAverage(values, 7); // Calculate 7-period moving average
 
-  return { labels: allDates, values };
+  return { labels: allDates, values, movingAverage };
+}
+
+/**
+ * Generates product performance insights based on sales trends.
+ * Compares current period sales to a previous period for each product.
+ * @param data An array of SalesDataRow.
+ * @param periodDays The number of days for the current and comparison periods.
+ * @returns An array of ProductInsight objects.
+ */
+export function generateProductPerformanceInsights(data: SalesDataRow[], periodDays: number = 30): ProductInsight[] {
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  const currentPeriodEndDate = new Date(today);
+  const currentPeriodStartDate = new Date(today);
+  currentPeriodStartDate.setDate(today.getDate() - periodDays + 1);
+  currentPeriodStartDate.setHours(0, 0, 0, 0);
+
+  const prevPeriodEndDate = new Date(currentPeriodStartDate);
+  prevPeriodEndDate.setDate(currentPeriodStartDate.getDate() - 1);
+  prevPeriodEndDate.setHours(23, 59, 59, 999);
+
+  const prevPeriodStartDate = new Date(prevPeriodEndDate);
+  prevPeriodStartDate.setDate(prevPeriodEndDate.getDate() - periodDays + 1);
+  prevPeriodStartDate.setHours(0, 0, 0, 0);
+
+  const currentPeriodData = filterDataByDateRange(data, currentPeriodStartDate, currentPeriodEndDate);
+  const previousPeriodData = filterDataByDateRange(data, prevPeriodStartDate, prevPeriodEndDate);
+
+  const getProductSales = (salesData: SalesDataRow[]) => {
+    const productSales: { [productName: string]: number } = {};
+    salesData.forEach(row => {
+      if (row.products) {
+        const productEntries = row.products.split(',').map(p => p.trim());
+        productEntries.forEach(entry => {
+          const match = entry.match(/(.*) x (\d+)/);
+          if (match) {
+            const productName = match[1].trim();
+            const quantity = parseInt(match[2], 10);
+            productSales[productName] = (productSales[productName] || 0) + quantity;
+          } else {
+            if ((row.itemsSold ?? 0) === 1 && productEntries.length === 1) {
+              productSales[entry] = (productSales[entry] || 0) + 1;
+            } else if (productEntries.length === 1) {
+              productSales[entry] = (productSales[entry] || 0) + (row.itemsSold ?? 0);
+            }
+          }
+        });
+      }
+    });
+    return productSales;
+  };
+
+  const currentProductSales = getProductSales(currentPeriodData);
+  const previousProductSales = getProductSales(previousPeriodData);
+
+  const insights: ProductInsight[] = [];
+  const allProductNames = new Set([...Object.keys(currentProductSales), ...Object.keys(previousProductSales)]);
+
+  allProductNames.forEach(productName => {
+    const currentSales = currentProductSales[productName] || 0;
+    const previousSales = previousProductSales[productName] || 0;
+
+    let insightText = '';
+    let type: 'positive' | 'negative' | 'neutral' = 'neutral';
+
+    if (previousSales === 0 && currentSales > 0) {
+      insightText = `"${productName}" is a new trending product with ${currentSales} units sold in the last ${periodDays} days.`;
+      type = 'positive';
+    } else if (currentSales === 0 && previousSales > 0) {
+      insightText = `"${productName}" sales have dropped to zero in the last ${periodDays} days.`;
+      type = 'negative';
+    } else if (previousSales > 0) {
+      const change = ((currentSales - previousSales) / previousSales) * 100;
+      if (change > 10) { // More than 10% increase
+        insightText = `"${productName}" sales are trending up, with a ${change.toFixed(2)}% increase in the last ${periodDays} days.`;
+        type = 'positive';
+      } else if (change < -10) { // More than 10% decrease
+        insightText = `"${productName}" sales are trending down, with a ${Math.abs(change).toFixed(2)}% decrease in the last ${periodDays} days.`;
+        type = 'negative';
+      } else {
+        insightText = `"${productName}" sales are stable in the last ${periodDays} days.`;
+        type = 'neutral';
+      }
+    } else {
+      insightText = `"${productName}" has no sales data for the last ${periodDays} days.`;
+      type = 'neutral';
+    }
+
+    if (insightText) {
+      insights.push({ productName, insight: insightText, type });
+    }
+  });
+
+  return insights;
+}
+
+/**
+ * Detects sales anomalies using a simple statistical method (e.g., values outside a certain number of standard deviations).
+ * @param data An array of SalesDataRow.
+ * @param periodDays The number of past days to consider for anomaly detection.
+ * @param stdDevMultiplier Multiplier for standard deviation to define anomaly threshold.
+ * @returns An array of Anomaly objects.
+ */
+export function detectSalesAnomalies(data: SalesDataRow[], periodDays: number = 90, stdDevMultiplier: number = 2): Anomaly[] {
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  const periodEndDate = new Date(today);
+  const periodStartDate = new Date(today);
+  periodStartDate.setDate(today.getDate() - periodDays + 1);
+  periodStartDate.setHours(0, 0, 0, 0);
+
+  const relevantData = filterDataByDateRange(data, periodStartDate, periodEndDate);
+
+  if (relevantData.length < 2) { // Need at least 2 data points to calculate std dev
+    return [];
+  }
+
+  const salesByDate: { [date: string]: number } = {};
+  relevantData.forEach(row => {
+    const date = new Date(row.orderDate).toISOString().split('T')[0];
+    salesByDate[date] = (salesByDate[date] || 0) + row.totalSales;
+  });
+
+  const allDates = Array.from(new Set(relevantData.map(row => new Date(row.orderDate).toISOString().split('T')[0]))).sort();
+  const dailySalesValues = allDates.map(date => salesByDate[date] || 0);
+
+  // Calculate mean
+  const mean = dailySalesValues.reduce((sum, val) => sum + val, 0) / dailySalesValues.length;
+
+  // Calculate standard deviation
+  const variance = dailySalesValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / dailySalesValues.length;
+  const stdDev = Math.sqrt(variance);
+
+  const anomalies: Anomaly[] = [];
+  const upperThreshold = mean + stdDevMultiplier * stdDev;
+  const lowerThreshold = mean - stdDevMultiplier * stdDev;
+
+  dailySalesValues.forEach((value, index) => {
+    const date = allDates[index];
+    if (value > upperThreshold) {
+      anomalies.push({
+        date: date,
+        value: value,
+        type: 'spike',
+        message: `Unusual sales spike detected on ${date}: ${value.toFixed(2)}€ (>${upperThreshold.toFixed(2)}€)`,
+      });
+    } else if (value < lowerThreshold && value > 0) { // Only consider drops if sales are not already zero
+      anomalies.push({
+        date: date,
+        value: value,
+        type: 'drop',
+        message: `Unusual sales drop detected on ${date}: ${value.toFixed(2)}€ (<${lowerThreshold.toFixed(2)}€)`,
+      });
+    } else if (value === 0 && mean > 0 && lowerThreshold > 0) { // Special case for complete drops to zero when there's usually sales
+      anomalies.push({
+        date: date,
+        value: value,
+        type: 'drop',
+        message: `Complete sales drop detected on ${date}: 0€ (expected average ${mean.toFixed(2)}€)`,
+      });
+    }
+  });
+
+  return anomalies;
 }
 
 /**
