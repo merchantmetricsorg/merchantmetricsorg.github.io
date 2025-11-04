@@ -6,6 +6,15 @@
   import { parseCsv } from '$lib/utils/csvParser';
   import Dashboard from '$lib/components/Dashboard.svelte';
   import { wooCommerceSampleCsv } from '$lib/data/wooCommerceSample';
+  import { tick } from 'svelte';
+
+  async function scrollToDashboard() {
+    await tick(); // Ensure DOM is updated
+    const dashboardElement = document.getElementById('ecommerce-dashboard');
+    if (dashboardElement) {
+      dashboardElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 
   async function handleCsvUpload(event: CustomEvent<string>) {
     const csvString = event.detail;
@@ -30,6 +39,7 @@
       }
 
       setSalesData(data, headers, fileName, platform);
+      scrollToDashboard(); // Scroll to dashboard after data is set
     } catch (e: any) {
       console.error('Failed to process CSV:', e);
       setError('Failed to process CSV: ' + e.message);
@@ -104,13 +114,15 @@
   <button on:click={testWooCommerceParsing} class="test-button">Test WooCommerce Parsing</button>
 
 
-  {#if $salesData.error}
-    <p class="error-message">{$salesData.error}</p>
-  {:else if $salesData.parsedData}
-    <Dashboard />
-  {:else}
-    <p>Upload a CSV file or run a test to get started with your e-commerce analytics.</p>
-  {/if}
+  <div id="ecommerce-dashboard">
+    {#if $salesData.error}
+      <p class="error-message">{$salesData.error}</p>
+    {:else if $salesData.parsedData}
+      <Dashboard />
+    {:else}
+      <p>Upload a CSV file or run a test to get started with your e-commerce analytics.</p>
+    {/if}
+  </div>
 </div>
 
 <style>
