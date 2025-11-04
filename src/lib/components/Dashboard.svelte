@@ -379,27 +379,25 @@
   </div>
 
   <div class="charts-container">
-    <div class="chart-card chart-tall">
+    <div class="chart-card">
       <canvas bind:this={salesOverTimeCanvasAll}></canvas>
     </div>
-    <div class="chart-card chart-tall">
+    <div class="chart-card">
       <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
     </div>
     <div class="chart-card">
       <canvas bind:this={salesOverTimeCanvas365Days}></canvas>
     </div>
     <div class="chart-card">
-      <h3>Top Selling Products</h3>
       <canvas bind:this={topProductsCanvas}></canvas>
     </div>
     <div class="chart-card">
-      <h3>Order Status Distribution</h3>
       <canvas bind:this={orderStatusCanvas}></canvas>
     </div>
-    <div class="chart-card chart-tall">
+    <div class="chart-card">
       <canvas bind:this={customerTypeCanvasAll}></canvas>
     </div>
-    <div class="chart-card chart-tall">
+    <div class="chart-card">
       <canvas bind:this={customerTypeCanvas30Days}></canvas>
     </div>
     <div class="chart-card">
@@ -463,6 +461,8 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    min-height: 400px; /* Consistent height for all charts */
+    position: relative;
   }
 
   .chart-card h3 {
@@ -471,16 +471,9 @@
     margin-bottom: 20px;
   }
 
-  .chart-tall {
-    min-height: 450px;
-  }
-
   canvas {
-    max-height: 300px; /* Default height for regular charts */
-  }
-
-  .chart-tall canvas {
-    max-height: 400px; /* Increased height for charts that need more space */
+    max-height: 350px; /* Adjusted max-height for consistent appearance */
+    height: 100%; /* Ensure canvas fills the container */
   }
 
   .kpi-card p {
