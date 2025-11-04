@@ -64,12 +64,17 @@
   <section class="platform-import-section">
     <h2>Import from your platform</h2>
     <div class="platform-cards">
-      <div class="platform-card">
-        <h3>WooCommerce</h3>
-        <p>Go to Statistics -> orders -> select YTD -> export</p>
-      </div>
       <div class="platform-card disabled">
         <h3>Shopify</h3>
+        <p>Coming soon</p>
+        <p>Go to the <a target="_blank" href="https://admin.shopify.com/orders">Orders page</a> -> Export -> Export orders by date -> Export as CSV file -> Export orders.</p>
+      </div>
+      <div class="platform-card">
+        <h3>WooCommerce</h3>
+        <p>Go to Statistics -> orders -> select YTD -> export.</p>
+      </div>
+      <div class="platform-card disabled">
+        <h3>More adapters</h3>
         <p>Coming soon</p>
       </div>
     </div>
