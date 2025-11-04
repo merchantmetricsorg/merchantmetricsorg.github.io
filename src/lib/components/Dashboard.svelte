@@ -323,47 +323,118 @@
 <div class="dashboard">
   <h2>E-commerce Dashboard</h2>
 
-  <div class="product-insights">
-    <h3>Product Performance Insights (Last 30 Days)</h3>
-    {#if productInsights.length > 0}
-      <ul>
-        {#each productInsights as insight}
-          <li class="insight-item insight-{insight.type}">
-            {insight.insight}
-          </li>
+  <!-- Overview Category -->
+  <section class="category-section">
+    <h3>Overview</h3>
+    <div class="kpi-cards">
+      {#if kpis}
+        {#each ['totalRevenue', 'totalOrders', 'averageOrderValue'] as kpiName}
+          {#if kpis[kpiName as keyof Kpis]}
+            {#each kpis[kpiName as keyof Kpis].filter(k => k.period === 'Last 30 Days') as kpi}
+              <div class="kpi-card">
+                <h3>{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
+                <p>
+                  {kpi.value.toFixed(2)}
+                  {#if kpiName === 'totalRevenue' || kpiName === 'averageOrderValue'}€{/if}
+                  {#if kpiName === 'repeatCustomerRate' || kpiName === 'promoCodeUsageRate'}%{/if}
+                </p>
+                <span class="kpi-period">{kpi.period}</span>
+                {#if kpi.change !== undefined && kpi.comparisonPeriod}
+                  <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                    {#if kpi.change > 0}▲{/if}
+                    {#if kpi.change < 0}▼{/if}
+                    {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
+                  </span>
+                {:else if kpi.comparisonPeriod}
+                  <span class="kpi-change">{kpi.comparisonPeriod}</span>
+                {/if}
+              </div>
+            {/each}
+          {/if}
         {/each}
-      </ul>
-    {:else}
-      <p>No product insights available for the last 30 days.</p>
-    {/if}
-  </div>
+        {#if kpis.repeatCustomerRate}
+          {#each kpis.repeatCustomerRate.filter(k => k.period === 'Last 90 Days') as kpi}
+            <div class="kpi-card">
+              <h3>Repeat Customer Rate</h3>
+              <p>{kpi.value.toFixed(2)}%</p>
+              <span class="kpi-period">{kpi.period}</span>
+              {#if kpi.change !== undefined && kpi.comparisonPeriod}
+                <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                  {#if kpi.change > 0}▲{/if}
+                  {#if kpi.change < 0}▼{/if}
+                  {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
+                </span>
+              {:else if kpi.comparisonPeriod}
+                <span class="kpi-change">{kpi.comparisonPeriod}</span>
+              {/if}
+            </div>
+          {/each}
+        {/if}
+      {/if}
+    </div>
+    <div class="charts-container">
+      <div class="chart-card">
+        <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
+      </div>
+    </div>
+  </section>
 
-  <div class="sales-anomalies">
-    <h3>Sales Anomaly Detection (Last 90 Days)</h3>
-    {#if salesAnomalies.length > 0}
-      <ul>
-        {#each salesAnomalies as anomaly}
-          <li class="anomaly-item anomaly-{anomaly.type}">
-            {anomaly.message}
-          </li>
+  <!-- Sales Category -->
+  <section class="category-section">
+    <h3>Sales</h3>
+    <div class="kpi-cards">
+      {#if kpis}
+        {#each ['totalRevenue', 'averageOrderValue', 'totalOrders', 'promoCodeUsageRate'] as kpiName}
+          {#if kpis[kpiName as keyof Kpis]}
+            {#each kpis[kpiName as keyof Kpis] as kpi}
+              <div class="kpi-card">
+                <h3>{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
+                <p>
+                  {kpi.value.toFixed(2)}
+                  {#if kpiName === 'totalRevenue' || kpiName === 'averageOrderValue'}€{/if}
+                  {#if kpiName === 'repeatCustomerRate' || kpiName === 'promoCodeUsageRate'}%{/if}
+                </p>
+                <span class="kpi-period">{kpi.period}</span>
+                {#if kpi.change !== undefined && kpi.comparisonPeriod}
+                  <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                    {#if kpi.change > 0}▲{/if}
+                    {#if kpi.change < 0}▼{/if}
+                    {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
+                  </span>
+                {:else if kpi.comparisonPeriod}
+                  <span class="kpi-change">{kpi.comparisonPeriod}</span>
+                {/if}
+              </div>
+            {/each}
+          {/if}
         {/each}
-      </ul>
-    {:else}
-      <p>No significant sales anomalies detected in the last 90 days.</p>
-    {/if}
-  </div>
+      {/if}
+    </div>
+    <div class="charts-container">
+      <div class="chart-card">
+        <canvas bind:this={salesOverTimeCanvasAll}></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas bind:this={salesOverTimeCanvas365Days}></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas bind:this={orderStatusCanvas}></canvas>
+      </div>
+    </div>
+  </section>
 
-  <div class="kpi-cards">
-    {#if kpis}
-      {#each Object.entries(kpis) as [kpiName, kpiArray]}
-        {#each kpiArray as kpi}
+  <!-- Customers Category -->
+  <section class="category-section">
+    <h3>Customers</h3>
+    <div class="kpi-cards">
+      {#if kpis && kpis.repeatCustomerRate}
+        {#each kpis.repeatCustomerRate as kpi}
           <div class="kpi-card">
-            <h3>{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
-            <p>
-              {kpi.value.toFixed(2)}
-              {#if kpiName === 'totalRevenue' || kpiName === 'averageOrderValue'}€{/if}
-              {#if kpiName === 'repeatCustomerRate' || kpiName === 'promoCodeUsageRate'}%{/if}
-            </p>
+            <h3>Repeat Customer Rate</h3>
+            <p>{kpi.value.toFixed(2)}%</p>
             <span class="kpi-period">{kpi.period}</span>
             {#if kpi.change !== undefined && kpi.comparisonPeriod}
               <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
@@ -376,36 +447,78 @@
             {/if}
           </div>
         {/each}
-      {/each}
-    {/if}
-  </div>
+      {/if}
+    </div>
+    <div class="charts-container">
+      <div class="chart-card">
+        <canvas bind:this={customerTypeCanvasAll}></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas bind:this={customerTypeCanvas30Days}></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas bind:this={customerTypeCanvas365Days}></canvas>
+      </div>
+    </div>
+  </section>
 
-  <div class="charts-container">
-    <div class="chart-card">
-      <canvas bind:this={salesOverTimeCanvasAll}></canvas>
+  <!-- Products Category -->
+  <section class="category-section">
+    <h3>Products</h3>
+    <div class="kpi-cards">
+      {#if kpis && kpis.averageItemsPerOrder}
+        {#each kpis.averageItemsPerOrder as kpi}
+          <div class="kpi-card">
+            <h3>Average Items Per Order</h3>
+            <p>{kpi.value.toFixed(2)}</p>
+            <span class="kpi-period">{kpi.period}</span>
+            {#if kpi.change !== undefined && kpi.comparisonPeriod}
+              <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                {#if kpi.change > 0}▲{/if}
+                {#if kpi.change < 0}▼{/if}
+                {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
+              </span>
+            {:else if kpi.comparisonPeriod}
+              <span class="kpi-change">{kpi.comparisonPeriod}</span>
+            {/if}
+          </div>
+        {/each}
+      {/if}
     </div>
-    <div class="chart-card">
-      <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
+    <div class="charts-container">
+      <div class="chart-card">
+        <canvas bind:this={topProductsCanvas}></canvas>
+      </div>
     </div>
-    <div class="chart-card">
-      <canvas bind:this={salesOverTimeCanvas365Days}></canvas>
+    <div class="product-insights">
+      <h3>Product Performance Insights (Last 30 Days)</h3>
+      {#if productInsights.length > 0}
+        <ul>
+          {#each productInsights as insight}
+            <li class="insight-item insight-{insight.type}">
+              {insight.insight}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p>No product insights available for the last 30 days.</p>
+      {/if}
     </div>
-    <div class="chart-card">
-      <canvas bind:this={topProductsCanvas}></canvas>
+    <div class="sales-anomalies">
+      <h3>Sales Anomaly Detection (Last 90 Days)</h3>
+      {#if salesAnomalies.length > 0}
+        <ul>
+          {#each salesAnomalies as anomaly}
+            <li class="anomaly-item anomaly-{anomaly.type}">
+              {anomaly.message}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p>No significant sales anomalies detected in the last 90 days.</p>
+      {/if}
     </div>
-    <div class="chart-card">
-      <canvas bind:this={orderStatusCanvas}></canvas>
-    </div>
-    <div class="chart-card">
-      <canvas bind:this={customerTypeCanvasAll}></canvas>
-    </div>
-    <div class="chart-card">
-      <canvas bind:this={customerTypeCanvas30Days}></canvas>
-    </div>
-    <div class="chart-card">
-      <canvas bind:this={customerTypeCanvas365Days}></canvas>
-    </div>
-  </div>
+  </section>
 </div>
 
 <style>
@@ -423,6 +536,22 @@
     margin-bottom: 25px;
     font-size: 2em;
     font-weight: 600;
+  }
+
+  .category-section {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .category-section h3 {
+    text-align: center;
+    color: #007bff;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    font-weight: 500;
   }
 
   .kpi-cards {
