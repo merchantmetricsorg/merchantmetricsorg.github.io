@@ -251,10 +251,8 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
   };
 
   const getMonthStart = (date: Date) => {
-    const d = new Date(date);
-    d.setDate(1);
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString().split('T')[0].substring(0, 7); // YYYY-MM
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), 1));
+    return d.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
   };
 
   if (days !== undefined) {
@@ -284,7 +282,32 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
     }
   }
 
-  if (grain === 'week') {
+  if (grain === 'month') {
+    // For 'All Time' monthly aggregation, generate month starts directly
+    if (days === undefined) {
+      const allOrderDates = data.map(row => new Date(row.orderDate));
+      const minDate = new Date(Math.min(...allOrderDates.map(date => date.getTime())));
+      const maxDate = new Date(Math.max(...allOrderDates.map(date => date.getTime())));
+
+      const uniqueMonths = new Set<string>();
+      for (let d = new Date(minDate.getFullYear(), minDate.getMonth(), 1); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        uniqueMonths.add(getMonthStart(d));
+      }
+      allDates = Array.from(uniqueMonths).sort();
+    } else {
+      const uniqueMonths = new Set<string>();
+      allDates.forEach(dateString => {
+        const monthStart = getMonthStart(new Date(dateString));
+        uniqueMonths.add(monthStart);
+      });
+      allDates = Array.from(uniqueMonths).sort();
+    }
+
+    Object.entries(salesByDate).forEach(([dateString, sales]) => {
+      const monthStart = getMonthStart(new Date(dateString));
+      aggregatedSales[monthStart] = (aggregatedSales[monthStart] || 0) + sales;
+    });
+  } else if (grain === 'week') {
     const uniqueWeeks = new Set<string>();
     allDates.forEach(dateString => {
       const weekStart = getWeekStart(new Date(dateString));
@@ -295,18 +318,6 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
     Object.entries(salesByDate).forEach(([dateString, sales]) => {
       const weekStart = getWeekStart(new Date(dateString));
       aggregatedSales[weekStart] = (aggregatedSales[weekStart] || 0) + sales;
-    });
-  } else if (grain === 'month') {
-    const uniqueMonths = new Set<string>();
-    allDates.forEach(dateString => {
-      const monthStart = getMonthStart(new Date(dateString));
-      uniqueMonths.add(monthStart);
-    });
-    allDates = Array.from(uniqueMonths).sort();
-
-    Object.entries(salesByDate).forEach(([dateString, sales]) => {
-      const monthStart = getMonthStart(new Date(dateString));
-      aggregatedSales[monthStart] = (aggregatedSales[monthStart] || 0) + sales;
     });
   } else {
     aggregatedSales = salesByDate;
@@ -579,10 +590,8 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
   };
 
   const getMonthStart = (date: Date) => {
-    const d = new Date(date);
-    d.setDate(1);
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString().split('T')[0].substring(0, 7); // YYYY-MM
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), 1));
+    return d.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
   };
 
   // Determine first order date for each customer from the entire dataset
@@ -620,13 +629,53 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
       allDates.push(d.toISOString().split('T')[0]);
     }
   } else {
-    allDates = Array.from(new Set([...Object.keys(salesByDateNew), ...Object.keys(salesByDateReturning)])).sort();
+    // For 'All Time' data, generate a continuous range of dates from the earliest to the latest order date
+    const allOrderDates = data.map(row => new Date(row.orderDate));
+    const minDate = new Date(Math.min(...allOrderDates.map(date => date.getTime())));
+    const maxDate = new Date(Math.max(...allOrderDates.map(date => date.getTime())));
+
+    minDate.setHours(0, 0, 0, 0);
+    maxDate.setHours(0, 0, 0, 0);
+
+    for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
+      allDates.push(d.toISOString().split('T')[0]);
+    }
   }
 
   let aggregatedNewCustomerSales: { [key: string]: number } = {};
   let aggregatedReturningCustomerSales: { [key: string]: number } = {};
 
-  if (grain === 'week') {
+  if (grain === 'month') {
+    // For 'All Time' monthly aggregation, generate month starts directly
+    if (days === undefined) {
+      const allOrderDates = data.map(row => new Date(row.orderDate));
+      const minDate = new Date(Math.min(...allOrderDates.map(date => date.getTime())));
+      const maxDate = new Date(Math.max(...allOrderDates.map(date => date.getTime())));
+
+      const uniqueMonths = new Set<string>();
+      for (let d = new Date(minDate.getFullYear(), minDate.getMonth(), 1); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+        uniqueMonths.add(getMonthStart(d));
+      }
+      allDates = Array.from(uniqueMonths).sort();
+    } else {
+      const uniqueMonths = new Set<string>();
+      allDates.forEach(dateString => {
+        const monthStart = getMonthStart(new Date(dateString));
+        uniqueMonths.add(monthStart);
+      });
+      allDates = Array.from(uniqueMonths).sort();
+    }
+
+    Object.entries(salesByDateNew).forEach(([dateString, sales]) => {
+      const monthStart = getMonthStart(new Date(dateString));
+      aggregatedNewCustomerSales[monthStart] = (aggregatedNewCustomerSales[monthStart] || 0) + sales;
+    });
+
+    Object.entries(salesByDateReturning).forEach(([dateString, sales]) => {
+      const monthStart = getMonthStart(new Date(dateString));
+      aggregatedReturningCustomerSales[monthStart] = (aggregatedReturningCustomerSales[monthStart] || 0) + sales;
+    });
+  } else if (grain === 'week') {
     const uniqueWeeks = new Set<string>();
     allDates.forEach(dateString => {
       const weekStart = getWeekStart(new Date(dateString));
@@ -642,23 +691,6 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
     Object.entries(salesByDateReturning).forEach(([dateString, sales]) => {
       const weekStart = getWeekStart(new Date(dateString));
       aggregatedReturningCustomerSales[weekStart] = (aggregatedReturningCustomerSales[weekStart] || 0) + sales;
-    });
-  } else if (grain === 'month') {
-    const uniqueMonths = new Set<string>();
-    allDates.forEach(dateString => {
-      const monthStart = getMonthStart(new Date(dateString));
-      uniqueMonths.add(monthStart);
-    });
-    allDates = Array.from(uniqueMonths).sort();
-
-    Object.entries(salesByDateNew).forEach(([dateString, sales]) => {
-      const monthStart = getMonthStart(new Date(dateString));
-      aggregatedNewCustomerSales[monthStart] = (aggregatedNewCustomerSales[monthStart] || 0) + sales;
-    });
-
-    Object.entries(salesByDateReturning).forEach(([dateString, sales]) => {
-      const monthStart = getMonthStart(new Date(dateString));
-      aggregatedReturningCustomerSales[monthStart] = (aggregatedReturningCustomerSales[monthStart] || 0) + sales;
     });
   } else {
     aggregatedNewCustomerSales = salesByDateNew;
