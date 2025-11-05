@@ -151,7 +151,7 @@ a:hover {
 }
 
 .btn-primary:hover {
-  background-color: darken(var(--color-primary), 10%);
+  filter: brightness(90%);
 }
 
 .btn-secondary {
@@ -160,7 +160,7 @@ a:hover {
 }
 
 .btn-secondary:hover {
-  background-color: darken(var(--color-secondary), 10%);
+  filter: brightness(90%);
 }
 
 .btn-accent {
@@ -169,7 +169,7 @@ a:hover {
 }
 
 .btn-accent:hover {
-  background-color: darken(var(--color-accent), 10%);
+  filter: brightness(90%);
 }
 
 /* Cards */
