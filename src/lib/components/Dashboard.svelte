@@ -23,6 +23,7 @@
 
   let salesOverTimeChartAll: Chart | null = null;
   let salesOverTimeChart30Days: Chart | null = null;
+  let salesOverTimeChart30DaysOverview: Chart | null = null; // New chart instance for overview section
   let salesOverTimeChart365Days: Chart | null = null;
   let topProductsChart: Chart | null = null;
   let orderStatusChart: Chart | null = null;
@@ -33,6 +34,7 @@
   let salesOverTimeCanvasAll: HTMLCanvasElement;
   let salesOverTimeCanvas30Days: HTMLCanvasElement;
   let salesOverTimeCanvas365Days: HTMLCanvasElement;
+  let salesOverTimeCanvas30DaysOverview: HTMLCanvasElement; // New canvas for overview section
   let topProductsCanvas: HTMLCanvasElement;
   let orderStatusCanvas: HTMLCanvasElement;
   let customerTypeCanvasAll: HTMLCanvasElement;
@@ -48,7 +50,7 @@
 
   // Function to render charts
   function updateCharts() {
-    if ($salesData.parsedData && salesOverTimeCanvasAll && salesOverTimeCanvas30Days && salesOverTimeCanvas365Days && topProductsCanvas && orderStatusCanvas && customerTypeCanvasAll && customerTypeCanvas30Days && customerTypeCanvas365Days) {
+    if ($salesData.parsedData && salesOverTimeCanvasAll && salesOverTimeCanvas30Days && salesOverTimeCanvas365Days && salesOverTimeCanvas30DaysOverview && topProductsCanvas && orderStatusCanvas && customerTypeCanvasAll && customerTypeCanvas30Days && customerTypeCanvas365Days) {
       const data = $salesData.parsedData;
 
       // Sales Over Time Charts
@@ -65,14 +67,15 @@
       const customerType30Days = prepareCustomerTypeData(data, 30, 'day');
       const customerType365Days = prepareCustomerTypeData(data, 365, 'month');
 
-      renderSalesOverTimeChart(salesOverTimeCanvasAll, salesOverTimeAll, 'Sales Over Time (All Time)', salesOverTimeChartAll, 'month');
-      renderSalesOverTimeChart(salesOverTimeCanvas30Days, salesOverTime30Days, 'Sales Over Time (Last 30 Days)', salesOverTimeChart30Days, 'day');
-      renderSalesOverTimeChart(salesOverTimeCanvas365Days, salesOverTime365Days, 'Sales Over Time (Last 365 Days)', salesOverTimeChart365Days, 'month');
+      salesOverTimeChart30DaysOverview = renderSalesOverTimeChart(salesOverTimeCanvas30DaysOverview, salesOverTime30Days, 'Sales Over Time (Last 30 Days)', salesOverTimeChart30DaysOverview, 'day'); // Render for overview
+      salesOverTimeChartAll = renderSalesOverTimeChart(salesOverTimeCanvasAll, salesOverTimeAll, 'Sales Over Time (All Time)', salesOverTimeChartAll, 'month');
+      salesOverTimeChart30Days = renderSalesOverTimeChart(salesOverTimeCanvas30Days, salesOverTime30Days, 'Sales Over Time (Last 30 Days)', salesOverTimeChart30Days, 'day');
+      salesOverTimeChart365Days = renderSalesOverTimeChart(salesOverTimeCanvas365Days, salesOverTime365Days, 'Sales Over Time (Last 365 Days)', salesOverTimeChart365Days, 'month');
       renderTopProductsChart(topProducts);
       renderOrderStatusChart(orderStatus);
-      renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'month');
-      renderCustomerTypeChart(customerTypeCanvas30Days, customerType30Days, 'Sales by Customer Type (Last 30 Days)', customerTypeChart30Days, 'day');
-      renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'month');
+      customerTypeChartAll = renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'month');
+      customerTypeChart30Days = renderCustomerTypeChart(customerTypeCanvas30Days, customerType30Days, 'Sales by Customer Type (Last 30 Days)', customerTypeChart30Days, 'day');
+      customerTypeChart365Days = renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'month');
     }
   }
 
@@ -84,11 +87,11 @@
   // Reactively call updateCharts when salesData changes
   $: $salesData.parsedData, updateCharts();
 
-  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[]; movingAverage: (number | null)[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' | 'month' = 'day') {
+  function renderSalesOverTimeChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[]; movingAverage: (number | null)[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' | 'month' = 'day'): Chart {
     if (chartInstance) {
       chartInstance.destroy();
     }
-    chartInstance = new Chart(canvas, {
+    const newChartInstance = new Chart(canvas, {
       type: 'line',
       data: {
         labels: data.labels,
@@ -140,15 +143,7 @@
         },
       },
     });
-
-    // Assign the new chart instance to the correct variable
-    if (title.includes('All Time')) {
-      salesOverTimeChartAll = chartInstance;
-    } else if (title.includes('Last 30 Days')) {
-      salesOverTimeChart30Days = chartInstance;
-    } else if (title.includes('Last 365 Days')) {
-      salesOverTimeChart365Days = chartInstance;
-    }
+    return newChartInstance;
   }
 
   function renderTopProductsChart(data: { labels: string[]; values: number[] }) {
@@ -254,11 +249,11 @@
     });
   }
 
-  function renderCustomerTypeChart(canvas: HTMLCanvasElement, data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' | 'month' = 'day') {
+  function renderCustomerTypeChart(canvas: HTMLCanvasElement, data: { labels: string[]; newCustomerSales: number[]; returningCustomerSales: number[] }, title: string, chartInstance: Chart | null, unit: 'day' | 'week' | 'month' = 'day'): Chart {
     if (chartInstance) {
       chartInstance.destroy();
     }
-    chartInstance = new Chart(canvas, {
+    const newChartInstance = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: data.labels,
@@ -308,15 +303,7 @@
         },
       },
     });
-
-    // Assign the new chart instance to the correct variable
-    if (title.includes('All Time')) {
-      customerTypeChartAll = chartInstance;
-    } else if (title.includes('Last 30 Days')) {
-      customerTypeChart30Days = chartInstance;
-    } else if (title.includes('Last 365 Days')) {
-      customerTypeChart365Days = chartInstance;
-    }
+    return newChartInstance;
   }
 </script>
 
@@ -374,7 +361,7 @@
     </div>
     <div class="charts-container">
       <div class="chart-card">
-        <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
+        <canvas bind:this={salesOverTimeCanvas30DaysOverview}></canvas>
       </div>
     </div>
   </section>
