@@ -5,9 +5,12 @@ export interface SalesDataRow {
   orderId: string;
   orderDate: string; // ISO 8601 string
   customerName?: string;
-  totalSales: number;
-  products?: string; // Raw string of products, for now
-  itemsSold?: number;
+  orderTotal: number; // Total sales for the entire order
+  productDetails?: string; // Raw string of products from WooCommerce, for initial parsing
+  productName?: string; // Name of the individual product
+  productQuantity?: number; // Quantity of the individual product in the line item
+  lineItemPrice?: number; // Price of the individual line item (productQuantity * unitPrice)
+  itemsSold?: number; // Total quantity of items sold in the order (WooCommerce) or line item quantity (Shopify)
   promoCodes?: string;
   orderStatus?: string;
   customerEmail?: string;
@@ -107,14 +110,14 @@ export function parseCsv(csvString: string): Promise<ParsedCSVData> {
           }
 
           // Type conversions and default values
-          parsedData.push({
+          const baseRow: Omit<SalesDataRow, 'productName' | 'productQuantity' | 'lineItemPrice'> = {
             orderId: String(mappedRow.orderId || ''),
             orderDate: mappedRow.orderDate
               ? new Date(mappedRow.orderDate).toISOString()
               : '',
             customerName: String(mappedRow.customerName || ''),
-            totalSales: Number(mappedRow.totalSales || 0),
-            products: String(mappedRow.products || ''),
+            orderTotal: Number(mappedRow.orderTotal || mappedRow.totalSales || 0), // Use orderTotal, fallback to totalSales for old data
+            productDetails: String(mappedRow.productDetails || mappedRow.products || ''), // Use productDetails, fallback to products
             itemsSold: Number(mappedRow.itemsSold || 0),
             promoCodes: String(mappedRow.promoCodes || ''),
             orderStatus: String(mappedRow.orderStatus || ''),
@@ -132,7 +135,68 @@ export function parseCsv(csvString: string): Promise<ParsedCSVData> {
             shippingCity: String(mappedRow.shippingCity || ''),
             paymentMethod: String(mappedRow.paymentMethod || ''),
             tags: String(mappedRow.tags || ''),
-          });
+          };
+
+          if (detectedAdapter.platform === 'WooCommerce') {
+            const productsString = baseRow.productDetails;
+            const orderTotal = baseRow.orderTotal;
+            const totalItemsSoldInOrder = baseRow.itemsSold || 0; // Total quantity of items sold in the order
+
+            let averagePricePerItem = 0;
+            if (totalItemsSoldInOrder > 0) {
+              averagePricePerItem = orderTotal / totalItemsSoldInOrder;
+            }
+
+            if (productsString) {
+              const productEntries = productsString.split(',').map(s => s.trim());
+              for (const entry of productEntries) {
+                const match = entry.match(/(.*)\s+x\s+(\d+)$/);
+                if (match) {
+                  const productName = match[1].trim();
+                  const productQuantity = Number(match[2]);
+                  const lineItemPrice = productQuantity * averagePricePerItem; // Calculate estimated line item price
+                  parsedData.push({
+                    ...baseRow,
+                    productName,
+                    productQuantity,
+                    lineItemPrice,
+                  });
+                } else {
+                  // Handle cases where product string doesn't match expected format, assume quantity 1
+                  parsedData.push({
+                    ...baseRow,
+                    productName: entry,
+                    productQuantity: 1,
+                    lineItemPrice: averagePricePerItem, // Assign average price if quantity is assumed 1
+                  });
+                }
+              }
+            } else {
+              // If no products string, still add the order as a single line item (e.g., for services)
+              parsedData.push({
+                ...baseRow,
+                productName: 'N/A',
+                productQuantity: 0,
+                lineItemPrice: 0, // No products, no line item price
+              });
+            }
+          } else if (detectedAdapter.platform === 'Shopify') {
+            // Shopify rows are already line items
+            parsedData.push({
+              ...baseRow,
+              productName: String(mappedRow.productName || ''), // Use new productName field
+              productQuantity: Number(mappedRow.productQuantity || 0), // Use new productQuantity field
+              lineItemPrice: Number(mappedRow.lineItemPrice || 0),
+            });
+          } else {
+            // For unknown platforms or if no specific handling, push the row as is
+            parsedData.push({
+              ...baseRow,
+              productName: String(mappedRow.productName || ''),
+              productQuantity: Number(mappedRow.productQuantity || 0),
+              lineItemPrice: Number(mappedRow.lineItemPrice || 0),
+            });
+          }
         }
       },
       complete: (results) => {

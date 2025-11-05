@@ -15,8 +15,8 @@ export const woocommerceAdapter: CsvAdapter = {
     'Commande n°': 'orderId',
     'Date': 'orderDate',
     'Client': 'customerName', // Assuming 'Client' maps to customer name
-    'Ventes nettes': 'totalSales', // Total sales for the order
-    'Produit(s)': 'products', // This will need special handling as it's a string of products
+    'Ventes nettes': 'orderTotal', // Total sales for the order
+    'Produit(s)': 'productDetails', // This will need special handling as it's a string of products
     'Articles vendus': 'itemsSold', // Total quantity of items sold in the order
     'Code(s) promo': 'promoCodes',
     'État': 'orderStatus',
@@ -35,9 +35,10 @@ export const shopifyAdapter: CsvAdapter = {
     'Created at': 'orderDate',
     'Billing Name': 'customerName',
     'Email': 'customerEmail',
-    'Total': 'totalSales',
-    'Lineitem name': 'products', // Shopify has multiple line items, this will need aggregation or special handling
-    'Lineitem quantity': 'itemsSold', // This will need aggregation or special handling
+    'Total': 'orderTotal',
+    'Lineitem name': 'productName', // Shopify has multiple line items, this will need aggregation or special handling
+    'Lineitem quantity': 'productQuantity', // This will need aggregation or special handling
+    'Lineitem price': 'lineItemPrice', // Assuming a 'Lineitem price' field exists in Shopify exports
     'Discount Code': 'promoCodes',
     'Financial Status': 'financialStatus',
     'Fulfillment Status': 'fulfillmentStatus',

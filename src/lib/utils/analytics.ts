@@ -96,7 +96,7 @@ export function calculateKpisForPeriod(data: SalesDataRow[]): Omit<Kpis, 'totalR
     };
   }
 
-  const totalRevenue = data.reduce((sum, row) => sum + row.totalSales, 0);
+  const totalRevenue = data.reduce((sum, row) => sum + (row.lineItemPrice || 0), 0); // Sum lineItemPrice for total revenue
   const totalOrders = data.length;
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -232,11 +232,11 @@ export function prepareSalesOverTimeData(data: SalesDataRow[], days?: number, gr
     return { labels: [], values: [], movingAverage: [] };
   }
 
-  const salesByDate: { [date: string]: number } = {};
-  data.forEach(row => {
-    const date = new Date(row.orderDate).toISOString().split('T')[0]; // Get YYYY-MM-DD
-    salesByDate[date] = (salesByDate[date] || 0) + row.totalSales;
-  });
+    const salesByDate: { [date: string]: number } = {};
+    data.forEach(row => {
+      const date = new Date(row.orderDate).toISOString().split('T')[0]; // Get YYYY-MM-DD
+      salesByDate[date] = (salesByDate[date] || 0) + (row.lineItemPrice || 0); // Sum lineItemPrice for sales over time
+    });
 
   let allDates: string[] = [];
   let aggregatedSales: { [key: string]: number } = {};
@@ -363,22 +363,8 @@ export function generateProductPerformanceInsights(data: SalesDataRow[], periodD
   const getProductSales = (salesData: SalesDataRow[]) => {
     const productSales: { [productName: string]: number } = {};
     salesData.forEach(row => {
-      if (row.products) {
-        const productEntries = row.products.split(',').map(p => p.trim());
-        productEntries.forEach(entry => {
-          const match = entry.match(/(.*) x (\d+)/);
-          if (match) {
-            const productName = match[1].trim();
-            const quantity = parseInt(match[2], 10);
-            productSales[productName] = (productSales[productName] || 0) + quantity;
-          } else {
-            if ((row.itemsSold ?? 0) === 1 && productEntries.length === 1) {
-              productSales[entry] = (productSales[entry] || 0) + 1;
-            } else if (productEntries.length === 1) {
-              productSales[entry] = (productSales[entry] || 0) + (row.itemsSold ?? 0);
-            }
-          }
-        });
+      if (row.productName && row.productQuantity !== undefined) {
+        productSales[row.productName] = (productSales[row.productName] || 0) + row.productQuantity;
       }
     });
     return productSales;
@@ -457,7 +443,7 @@ export function detectSalesAnomalies(data: SalesDataRow[], periodDays: number = 
   const salesByDate: { [date: string]: number } = {};
   relevantData.forEach(row => {
     const date = new Date(row.orderDate).toISOString().split('T')[0];
-    salesByDate[date] = (salesByDate[date] || 0) + row.totalSales;
+    salesByDate[date] = (salesByDate[date] || 0) + (row.lineItemPrice || 0); // Sum lineItemPrice for anomaly detection
   });
 
   const allDates = Array.from(new Set(relevantData.map(row => new Date(row.orderDate).toISOString().split('T')[0]))).sort();
@@ -513,24 +499,8 @@ export function prepareTopProductsData(data: SalesDataRow[]): { labels: string[]
   const productSales: { [productName: string]: number } = {};
 
   data.forEach(row => {
-    if (row.products) {
-      // Assuming products string format like "Product A x 1, Product B x 2"
-      const productEntries = row.products.split(',').map(p => p.trim());
-      productEntries.forEach(entry => {
-        const match = entry.match(/(.*) x (\d+)/);
-        if (match) {
-          const productName = match[1].trim();
-          const quantity = parseInt(match[2], 10);
-          productSales[productName] = (productSales[productName] || 0) + quantity;
-        } else {
-          // Fallback for products without explicit quantity (assume 1 if itemsSold is 1)
-          if ((row.itemsSold ?? 0) === 1 && productEntries.length === 1) {
-            productSales[entry] = (productSales[entry] || 0) + 1;
-          } else if (productEntries.length === 1) { // If multiple items sold but only one product listed, distribute
-            productSales[entry] = (productSales[entry] || 0) + (row.itemsSold ?? 0);
-          }
-        }
-      });
+    if (row.productName && row.productQuantity !== undefined) {
+      productSales[row.productName] = (productSales[row.productName] || 0) + row.productQuantity;
     }
   });
 
@@ -609,9 +579,9 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
   data.forEach(row => {
     const date = new Date(row.orderDate).toISOString().split('T')[0];
     if (row.customerName && customerFirstOrderDate[row.customerName] === date) {
-      salesByDateNew[date] = (salesByDateNew[date] || 0) + row.totalSales;
+      salesByDateNew[date] = (salesByDateNew[date] || 0) + (row.lineItemPrice || 0);
     } else {
-      salesByDateReturning[date] = (salesByDateReturning[date] || 0) + row.totalSales;
+      salesByDateReturning[date] = (salesByDateReturning[date] || 0) + (row.lineItemPrice || 0);
     }
   });
 
