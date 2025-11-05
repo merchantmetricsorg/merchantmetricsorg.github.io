@@ -2,6 +2,7 @@ export interface CsvAdapter {
   platform: string;
   detector: (headers: string[]) => boolean;
   mapping: { [key: string]: string };
+  strict?: boolean; // Add strict flag, default to true if not specified
 }
 
 export const woocommerceAdapter: CsvAdapter = {
@@ -25,6 +26,7 @@ export const woocommerceAdapter: CsvAdapter = {
 
 export const shopifyAdapter: CsvAdapter = {
   platform: 'Shopify',
+  strict: false, // Set strict to false for Shopify
   detector: (headers: string[]) => {
     return headers.includes('Name') && headers.includes('Email') && headers.includes('Financial Status') && headers.includes('Total');
   },

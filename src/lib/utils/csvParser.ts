@@ -40,46 +40,74 @@ export interface ParsedCSVData {
  */
 export function parseCsv(csvString: string): Promise<ParsedCSVData> {
   return new Promise((resolve) => {
+    let headers: string[] = [];
+    const parsedData: SalesDataRow[] = [];
+    const parsingErrors: Papa.ParseError[] = [];
+    let detectedAdapter: CsvAdapter | undefined;
+
     Papa.parse(csvString, {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        const headers = results.meta.fields || [];
-        let detectedAdapter: CsvAdapter | undefined;
+      step: (rowParseResult, parser) => {
+        // Always detect adapter first, as headers are available from the first step
+        if (!detectedAdapter) {
+          headers = rowParseResult.meta.fields || [];
+          for (const adapter of adapters) {
+            if (adapter.detector(headers)) {
+              detectedAdapter = adapter;
+              break;
+            }
+          }
 
-        for (const adapter of adapters) {
-          if (adapter.detector(headers)) {
-            detectedAdapter = adapter;
-            break;
+          if (!detectedAdapter) {
+            parser.abort(); // No adapter found, stop parsing
+            resolve({
+              headers,
+              data: [],
+              errors: [{
+                message: "No suitable adapter found for the provided CSV headers.",
+                row: 0,
+                index: 0,
+                type: "Delimiter",
+                code: "UndetectableDelimiter"
+              } as Papa.ParseError],
+              platform: 'Unknown',
+            });
+            return;
           }
         }
 
-        if (!detectedAdapter) {
-          resolve({
-            headers,
-            data: [],
-            errors: [{
-              message: "No suitable adapter found for the provided CSV headers.",
-              row: 0,
-              index: 0,
-              type: "Delimiter", // Using a valid PapaParse error type
-              code: "UndetectableDelimiter" // Using a valid PapaParse error code
-            } as Papa.ParseError],
-            platform: 'Unknown',
-          });
-          return;
-        }
+        const row: any = rowParseResult.data;
+        const mappedRow: any = {};
 
-        const data: SalesDataRow[] = results.data.map((row: any) => {
-          const mappedRow: any = {};
+        // Only process row if an adapter is detected and it's not an empty row
+        if (detectedAdapter && Object.keys(row).length > 0) {
+          if (rowParseResult.errors.length > 0) {
+            // Filter out "Too many fields" errors for non-strict adapters
+            const filteredErrors = rowParseResult.errors.filter(error => {
+              const isTooManyFieldsError = error.code === 'TooManyFields';
+              const isNonStrictAdapter = detectedAdapter.strict === false; // detectedAdapter is guaranteed to be defined here
+
+              if (isTooManyFieldsError && isNonStrictAdapter) {
+                console.warn(`Filtered out error for platform ${detectedAdapter.platform}: ${error.message}`);
+                return false; // Filter this error out
+              }
+              return true; // Keep other errors
+            });
+            parsingErrors.push(...filteredErrors);
+          }
+
           for (const originalHeader in detectedAdapter.mapping) {
             const standardizedField = detectedAdapter.mapping[originalHeader];
-            mappedRow[standardizedField] = row[originalHeader];
+            // Only map if the original header exists in the row, or if the adapter is not strict
+            if (row[originalHeader as keyof typeof row] !== undefined || detectedAdapter.strict === false) {
+              mappedRow[standardizedField] = row[originalHeader as keyof typeof row];
+            }
           }
 
           // Type conversions and default values
-          return {
+          parsedData.push({
             orderId: String(mappedRow.orderId || ''),
             orderDate: mappedRow.orderDate
               ? new Date(mappedRow.orderDate).toISOString()
@@ -104,22 +132,18 @@ export function parseCsv(csvString: string): Promise<ParsedCSVData> {
             shippingCity: String(mappedRow.shippingCity || ''),
             paymentMethod: String(mappedRow.paymentMethod || ''),
             tags: String(mappedRow.tags || ''),
-          };
-        });
+          });
+        }
+      },
+      complete: (results) => {
+        // If parsing was aborted due to no adapter, we already resolved.
+        if (!detectedAdapter) return;
 
         resolve({
-          headers,
-          data,
-          errors: results.errors,
+          headers: results.meta.fields || [],
+          data: parsedData,
+          errors: parsingErrors, // Use collected errors
           platform: detectedAdapter.platform,
-        });
-      },
-      error: (error: Papa.ParseError) => {
-        resolve({
-          headers: [],
-          data: [],
-          errors: [error],
-          platform: 'Unknown',
         });
       },
     });
