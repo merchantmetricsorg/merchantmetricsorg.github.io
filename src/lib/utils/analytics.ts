@@ -672,3 +672,155 @@ export function prepareCustomerTypeData(data: SalesDataRow[], days?: number, gra
 
   return { labels: allDates, newCustomerSales, returningCustomerSales };
 }
+
+/**
+ * Prepares data for a "Sales by Hour of Day" chart.
+ * Aggregates total sales for each hour of the day.
+ * @param data An array of SalesDataRow.
+ * @returns An object with labels (hours 0-23) and values (total sales for that hour).
+ */
+export function prepareSalesByHourOfDayData(data: SalesDataRow[]): { labels: string[]; values: number[] } {
+  if (!data || data.length === 0) {
+    return { labels: Array.from({ length: 24 }, (_, i) => i.toString()), values: new Array(24).fill(0) };
+  }
+
+  const salesByHour: { [hour: string]: number } = {};
+  for (let i = 0; i < 24; i++) {
+    salesByHour[i.toString()] = 0; // Initialize all hours to 0
+  }
+
+  data.forEach(row => {
+    const orderDate = new Date(row.orderDate);
+    const hour = orderDate.getHours();
+    salesByHour[hour.toString()] = (salesByHour[hour.toString()] || 0) + (row.lineItemPrice || 0);
+  });
+
+  const labels = Object.keys(salesByHour).sort((a, b) => parseInt(a) - parseInt(b));
+  const values = labels.map(hour => salesByHour[hour]);
+
+  return { labels, values };
+}
+
+/**
+ * Prepares data for a "Sales by Day of Week" chart.
+ * Aggregates total sales for each day of the week.
+ * @param data An array of SalesDataRow.
+ * @returns An object with labels (days of week) and values (total sales for that day).
+ */
+export function prepareSalesByDayOfWeekData(data: SalesDataRow[]): { labels: string[]; values: number[] } {
+  if (!data || data.length === 0) {
+    return { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], values: new Array(7).fill(0) };
+  }
+
+  const salesByDay: { [day: number]: number } = {}; // 0 for Sunday, 1 for Monday, etc.
+  for (let i = 0; i < 7; i++) {
+    salesByDay[i] = 0; // Initialize all days to 0
+  }
+
+  data.forEach(row => {
+    const orderDate = new Date(row.orderDate);
+    const day = orderDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
+    salesByDay[day] = (salesByDay[day] || 0) + (row.lineItemPrice || 0);
+  });
+
+  const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const values = labels.map((_, index) => salesByDay[index]);
+
+  return { labels, values };
+}
+
+export interface CohortRetentionData {
+  cohorts: string[];
+  retention: { [cohort: string]: (number | null)[] };
+  months: string[];
+}
+
+/**
+ * Prepares data for a "Cohort Retention" analysis.
+ * Groups customers by their first purchase month and tracks their retention over subsequent months.
+ * @param data An array of SalesDataRow.
+ * @returns An object containing cohort labels, retention percentages, and month labels.
+ */
+export function prepareCohortRetentionData(data: SalesDataRow[]): CohortRetentionData {
+  if (!data || data.length === 0) {
+    return { cohorts: [], retention: {}, months: [] };
+  }
+
+  // 1. Determine first purchase month for each unique customer
+  const customerFirstPurchaseMonth: { [customerName: string]: string } = {}; // YYYY-MM format
+  const allOrderDates = data.map(row => new Date(row.orderDate));
+  const minDate = new Date(Math.min(...allOrderDates.map(date => date.getTime())));
+  const maxDate = new Date(Math.max(...allOrderDates.map(date => date.getTime())));
+
+  // Sort data by order date to ensure correct first purchase month
+  data.sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime());
+
+  data.forEach(row => {
+    if (row.customerName) {
+      const orderMonth = new Date(row.orderDate).toISOString().substring(0, 7); // YYYY-MM
+      if (!customerFirstPurchaseMonth[row.customerName]) {
+        customerFirstPurchaseMonth[row.customerName] = orderMonth;
+      }
+    }
+  });
+
+  // 2. Group customers into cohorts based on their first purchase month
+  const cohorts: { [month: string]: Set<string> } = {}; // { 'YYYY-MM': Set<customerName> }
+  Object.entries(customerFirstPurchaseMonth).forEach(([customerName, firstPurchaseMonth]) => {
+    if (!cohorts[firstPurchaseMonth]) {
+      cohorts[firstPurchaseMonth] = new Set();
+    }
+    cohorts[firstPurchaseMonth].add(customerName);
+  });
+
+  const sortedCohortMonths = Object.keys(cohorts).sort();
+
+  // 3. Track customer activity in subsequent months
+  const monthlyActivity: { [month: string]: { [customerName: string]: boolean } } = {}; // { 'YYYY-MM': { customerName: true } }
+  data.forEach(row => {
+    if (row.customerName) {
+      const orderMonth = new Date(row.orderDate).toISOString().substring(0, 7);
+      if (!monthlyActivity[orderMonth]) {
+        monthlyActivity[orderMonth] = {};
+      }
+      monthlyActivity[orderMonth][row.customerName] = true;
+    }
+  });
+
+  // 4. Calculate retention rates
+  const retentionData: { [cohort: string]: (number | null)[] } = {};
+  const allMonths: string[] = []; // All months from minDate to maxDate
+
+  for (let d = new Date(minDate.getFullYear(), minDate.getMonth(), 1); d <= maxDate; d.setMonth(d.getMonth() + 1)) {
+    allMonths.push(d.toISOString().substring(0, 7));
+  }
+
+  sortedCohortMonths.forEach(cohortMonth => {
+    const cohortCustomers = cohorts[cohortMonth];
+    const cohortSize = cohortCustomers.size;
+    const retentionRow: (number | null)[] = [];
+
+    allMonths.forEach(currentMonth => {
+      if (currentMonth < cohortMonth) {
+        retentionRow.push(null); // Before cohort started
+      } else {
+        const activeCustomersInMonth = monthlyActivity[currentMonth] || {};
+        let retainedCount = 0;
+        cohortCustomers.forEach(customerName => {
+          if (activeCustomersInMonth[customerName]) {
+            retainedCount++;
+          }
+        });
+        const retentionPercentage = cohortSize > 0 ? (retainedCount / cohortSize) * 100 : 0;
+        retentionRow.push(parseFloat(retentionPercentage.toFixed(2)));
+      }
+    });
+    retentionData[cohortMonth] = retentionRow;
+  });
+
+  return {
+    cohorts: sortedCohortMonths,
+    retention: retentionData,
+    months: allMonths,
+  };
+}

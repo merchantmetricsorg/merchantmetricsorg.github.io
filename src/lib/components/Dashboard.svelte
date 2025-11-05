@@ -9,48 +9,67 @@
     prepareTopProductsData,
     prepareOrderStatusData,
     prepareCustomerTypeData,
+    prepareSalesByHourOfDayData,
+    prepareSalesByDayOfWeekData,
+    prepareCohortRetentionData,
     generateProductPerformanceInsights,
     detectSalesAnomalies,
     type Kpi,
     type Kpis,
     type ProductInsight,
-    type Anomaly
+    type Anomaly,
+    type CohortRetentionData
   } from '$lib/utils/analytics';
 
   let kpis: Kpis | null = null;
   let productInsights: ProductInsight[] = [];
   let salesAnomalies: Anomaly[] = [];
+  let cohortRetentionData: CohortRetentionData | null = null;
+  let showCohortRetention: boolean = false; // New state variable to control visibility
 
   let salesOverTimeChartAll: Chart | null = null;
   let salesOverTimeChart30Days: Chart | null = null;
-  let salesOverTimeChart30DaysOverview: Chart | null = null; // New chart instance for overview section
+  let salesOverTimeChart30DaysOverview: Chart | null = null;
   let salesOverTimeChart365Days: Chart | null = null;
   let topProductsChart: Chart | null = null;
   let orderStatusChart: Chart | null = null;
   let customerTypeChartAll: Chart | null = null;
   let customerTypeChart30Days: Chart | null = null;
   let customerTypeChart365Days: Chart | null = null;
+  let salesByHourOfDayChart: Chart | null = null;
+  let salesByDayOfWeekChart: Chart | null = null;
 
   let salesOverTimeCanvasAll: HTMLCanvasElement;
   let salesOverTimeCanvas30Days: HTMLCanvasElement;
   let salesOverTimeCanvas365Days: HTMLCanvasElement;
-  let salesOverTimeCanvas30DaysOverview: HTMLCanvasElement; // New canvas for overview section
+  let salesOverTimeCanvas30DaysOverview: HTMLCanvasElement;
   let topProductsCanvas: HTMLCanvasElement;
   let orderStatusCanvas: HTMLCanvasElement;
   let customerTypeCanvasAll: HTMLCanvasElement;
   let customerTypeCanvas30Days: HTMLCanvasElement;
   let customerTypeCanvas365Days: HTMLCanvasElement;
+  let salesByHourOfDayCanvas: HTMLCanvasElement;
+  let salesByDayOfWeekCanvas: HTMLCanvasElement;
 
   // Reactive block for KPI calculation, product insights, and anomaly detection
   $: if ($salesData.parsedData) {
     kpis = calculateAllKpis($salesData.parsedData);
     productInsights = generateProductPerformanceInsights($salesData.parsedData);
     salesAnomalies = detectSalesAnomalies($salesData.parsedData);
+    // cohortRetentionData is now generated on demand
+  }
+
+  // Function to generate Cohort Retention Analysis
+  function generateCohortRetentionAnalysis() {
+    if ($salesData.parsedData) {
+      cohortRetentionData = prepareCohortRetentionData($salesData.parsedData);
+      showCohortRetention = true;
+    }
   }
 
   // Function to render charts
   function updateCharts() {
-    if ($salesData.parsedData && salesOverTimeCanvasAll && salesOverTimeCanvas30Days && salesOverTimeCanvas365Days && salesOverTimeCanvas30DaysOverview && topProductsCanvas && orderStatusCanvas && customerTypeCanvasAll && customerTypeCanvas30Days && customerTypeCanvas365Days) {
+    if ($salesData.parsedData && salesOverTimeCanvasAll && salesOverTimeCanvas30Days && salesOverTimeCanvas365Days && salesOverTimeCanvas30DaysOverview && topProductsCanvas && orderStatusCanvas && customerTypeCanvasAll && customerTypeCanvas30Days && customerTypeCanvas365Days && salesByHourOfDayCanvas && salesByDayOfWeekCanvas) {
       const data = $salesData.parsedData;
 
       // Sales Over Time Charts
@@ -61,6 +80,8 @@
       // Other Charts
       const topProducts = prepareTopProductsData(data);
       const orderStatus = prepareOrderStatusData(data);
+      const salesByHour = prepareSalesByHourOfDayData(data);
+      const salesByDay = prepareSalesByDayOfWeekData(data);
 
       // Customer Type Charts
       const customerTypeAll = prepareCustomerTypeData(data, undefined, 'month');
@@ -76,6 +97,8 @@
       customerTypeChartAll = renderCustomerTypeChart(customerTypeCanvasAll, customerTypeAll, 'Sales by Customer Type (All Time)', customerTypeChartAll, 'month');
       customerTypeChart30Days = renderCustomerTypeChart(customerTypeCanvas30Days, customerType30Days, 'Sales by Customer Type (Last 30 Days)', customerTypeChart30Days, 'day');
       customerTypeChart365Days = renderCustomerTypeChart(customerTypeCanvas365Days, customerType365Days, 'Sales by Customer Type (Last 365 Days)', customerTypeChart365Days, 'month');
+      salesByHourOfDayChart = renderSalesByHourOfDayChart(salesByHourOfDayCanvas, salesByHour, 'Sales by Hour of Day', salesByHourOfDayChart);
+      salesByDayOfWeekChart = renderSalesByDayOfWeekChart(salesByDayOfWeekCanvas, salesByDay, 'Sales by Day of Week', salesByDayOfWeekChart);
     }
   }
 
@@ -305,6 +328,96 @@
     });
     return newChartInstance;
   }
+
+  function renderSalesByHourOfDayChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[] }, title: string, chartInstance: Chart | null): Chart {
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+    const newChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: 'Total Sales',
+            data: data.values,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Hour of Day',
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Revenue',
+            },
+            beginAtZero: true,
+          },
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: title,
+          },
+        },
+      },
+    });
+    return newChartInstance;
+  }
+
+  function renderSalesByDayOfWeekChart(canvas: HTMLCanvasElement, data: { labels: string[]; values: number[] }, title: string, chartInstance: Chart | null): Chart {
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+    const newChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: 'Total Sales',
+            data: data.values,
+            backgroundColor: 'rgba(153, 102, 255, 0.6)',
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Day of Week',
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Revenue',
+            },
+            beginAtZero: true,
+          },
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: title,
+          },
+        },
+      },
+    });
+    return newChartInstance;
+  }
 </script>
 
 <div class="dashboard">
@@ -506,9 +619,75 @@
       {/if}
     </div>
   </section>
+
+  <!-- Analytics Category -->
+  <section class="category-section">
+    <h3>Analytics</h3>
+    <div class="charts-container">
+      <div class="chart-card">
+        <canvas bind:this={salesByHourOfDayCanvas}></canvas>
+      </div>
+      <div class="chart-card">
+        <canvas bind:this={salesByDayOfWeekCanvas}></canvas>
+      </div>
+    </div>
+    <div class="cohort-retention">
+      <h3>Cohort Retention Analysis</h3>
+      {#if !showCohortRetention}
+        <button on:click={generateCohortRetentionAnalysis} class="generate-button">Generate Cohort Retention Analysis</button>
+      {:else if cohortRetentionData && cohortRetentionData.cohorts.length > 0}
+        <div class="retention-table-container">
+          <table class="retention-table">
+            <thead>
+              <tr>
+                <th>Cohort</th>
+                {#each cohortRetentionData.months as month}
+                  <th>{month}</th>
+                {/each}
+              </tr>
+            </thead>
+            <tbody>
+              {#each cohortRetentionData.cohorts as cohort}
+                <tr>
+                  <td>{cohort}</td>
+                  {#each cohortRetentionData.retention[cohort] as retentionValue}
+                    <td class={retentionValue !== null ? (retentionValue > 0 ? 'retained' : 'not-retained') : ''}>
+                      {#if retentionValue !== null}
+                        {retentionValue.toFixed(0)}%
+                      {:else}
+                        -
+                      {/if}
+                    </td>
+                  {/each}
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {:else}
+        <p>No cohort retention data available.</p>
+      {/if}
+    </div>
+  </section>
 </div>
 
 <style>
+  .generate-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .generate-button:hover {
+    background-color: #0056b3;
+  }
   .dashboard {
     padding: 15px; /* Reduced padding */
     background-color: #ffffff; /* Lighter background */
@@ -712,5 +891,64 @@
 
   .kpi-change.bad {
     color: #dc3545; /* Red for negative change */
+  }
+
+  .cohort-retention {
+    background-color: #fdfdfd;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    margin-top: 20px;
+  }
+
+  .cohort-retention h3 {
+    text-align: center;
+    color: #34495e;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+  }
+
+  .retention-table-container {
+    overflow-x: auto;
+    margin-top: 15px;
+  }
+
+  .retention-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    min-width: 600px; /* Ensure table is wide enough for content */
+  }
+
+  .retention-table th,
+  .retention-table td {
+    border: 1px solid #e9ecef;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  .retention-table thead th {
+    background-color: #f1f3f5;
+    font-weight: bold;
+    color: #495057;
+  }
+
+  .retention-table tbody td {
+    background-color: #ffffff;
+  }
+
+  .retention-table tbody tr:nth-child(even) td {
+    background-color: #f8f9fa;
+  }
+
+  .retention-table td.retained {
+    background-color: #e6ffed; /* Light green for retained */
+    color: #155724;
+  }
+
+  .retention-table td.not-retained {
+    background-color: #ffebeb; /* Light red for not retained (if 0%) */
+    color: #721c24;
   }
 </style>
