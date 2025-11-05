@@ -735,6 +735,16 @@
     height: 100% !important;
   }
 
+  @media (max-width: 767px) {
+    .chart-card {
+      min-height: 250px; /* Smaller height for charts on mobile */
+    }
+
+    canvas {
+      max-height: 200px;
+    }
+  }
+
   .product-insights,
   .sales-anomalies,
   .cohort-retention {

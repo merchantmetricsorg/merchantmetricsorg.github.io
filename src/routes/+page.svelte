@@ -64,20 +64,20 @@
 </script>
 
 <svelte:head>
-  <title>MerchantMetrics: Instant & Private E-commerce Analytics Dashboard</title>
-  <meta name="description" content="Turn your sales CSV into a powerful analytics dashboard in one click. Get instant KPIs, trends, and product insights—your data never leaves your browser." />
+  <title>MerchantMetrics: Automated E-commerce Analytics, No Skills Needed</title>
+  <meta name="description" content="Transform your sales CSV into an automated analytics dashboard. Get powerful KPIs, trends, and product insights without needing business analytics skills—your data never leaves your browser." />
 </svelte:head>
 
 
 <div class="container">
-  <h1 class="text-center">Unlock Instant Insights from Your E-commerce Data</h1>
-  <p class="text-center text-medium">Instantly create a private, powerful BI dashboard from your sales CSV. No sign-up required, completely free.</p>
+  <h1 class="text-center">Automated E-commerce Analytics: No Skills Required</h1>
+  <p class="text-center text-medium">Automatically generate a private, powerful BI dashboard from your sales CSV. No business analytics skills needed, no sign-up required, completely free.</p>
   <section class="my-xl text-center">
     <h2 class="text-primary">Key Features</h2>
     <div class="grid grid-cols-3 my-lg">
       <div class="card feature-card">
-        <h3>Instant Intelligence</h3>
-        <p>Visualize KPIs, sales trends, and product performance the moment you provide your data.</p>
+        <h3>Automated Intelligence</h3>
+        <p>Get automated KPIs, sales trends, and product performance visualized for you, no business analytics skills required.</p>
       </div>
       <div class="card feature-card">
         <h3>Your Data Stays Yours</h3>
@@ -91,8 +91,8 @@
   </section>
 
   <section class="my-xl text-center">
-    <h2 class="text-primary">Get Your Dashboard in 30 Seconds</h2>
-    <p class="text-center text-medium">Follow these simple steps to upload your sales data and generate your insights.</p>
+    <h2 class="text-primary">Automated Insights in Minutes</h2>
+    <p class="text-center text-medium">Follow these simple steps to upload your sales data and automatically generate your insights.</p>
     <div class="grid grid-cols-3 my-lg">
       <div class="card platform-card">
         <h3>Shopify</h3>
@@ -110,7 +110,7 @@
   </section>
 
   <div class="my-xl text-center">
-    <h2 class="text-primary">Analyze Your Sales Data Now</h2>
+    <h2 class="text-primary">Get Your Automated Sales Dashboard Now</h2>
     <div class="my-lg">
       <CsvUploader on:csvUploaded={handleCsvUpload} on:csvCleared={handleCsvCleared} />
     </div>

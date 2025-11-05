@@ -98,6 +98,17 @@ a:hover {
   padding: var(--spacing-lg) var(--spacing-md);
 }
 
+@media (max-width: 767px) {
+  .container {
+    padding: var(--spacing-lg) var(--spacing-sm); /* Thinner horizontal margin on mobile */
+  }
+
+  h1 { font-size: var(--font-size-h2); }
+  h2 { font-size: var(--font-size-h3); }
+  h3 { font-size: var(--font-size-h4); }
+  h4 { font-size: var(--font-size-base); }
+}
+
 .text-center {
   text-align: center;
 }
@@ -199,3 +210,11 @@ a:hover {
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 767px) {
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr; /* Stack columns on mobile */
+  }
+}
