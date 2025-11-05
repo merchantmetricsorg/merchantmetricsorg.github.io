@@ -85,7 +85,7 @@
         <p>Analyzes your sales data entirely within your browser. Nothing is ever uploaded to a server, ensuring total privacy.</p>
       </div>
       <div class="card feature-card">
-        <h3>Powerful & Free Forever</h3>
+        <h3>Powerful & Free</h3>
         <p>Leverage a powerful, community-driven tool at no cost, with full transparency.</p>
       </div>
     </div>
