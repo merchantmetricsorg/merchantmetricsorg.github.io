@@ -64,8 +64,9 @@
 </script>
 
 <svelte:head>
-  <title>MerchantMetrics: Automated E-commerce Analytics, No Skills Needed</title>
+  <title>MerchantMetrics: Free E-commerce Analytics Dashboard</title>
   <meta name="description" content="Transform your sales CSV into an automated analytics dashboard. Get powerful KPIs, trends, and product insights without needing business analytics skills—your data never leaves your browser." />
+  <link rel="canonical" href="https://merchantmetricsorg.github.io/" />
 </svelte:head>
 
 
