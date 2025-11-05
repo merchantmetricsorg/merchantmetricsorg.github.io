@@ -111,7 +111,7 @@
 
   <CsvUploader on:csvUploaded={handleCsvUpload} on:csvCleared={handleCsvCleared} />
 
-  <button on:click={testWooCommerceParsing} class="test-button">Test WooCommerce Parsing</button>
+  <button on:click={testWooCommerceParsing} class="test-button">Test Sample CSV</button>
 
 
   <div id="ecommerce-dashboard">

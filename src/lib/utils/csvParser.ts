@@ -10,7 +10,20 @@ export interface SalesDataRow {
   itemsSold?: number;
   promoCodes?: string;
   orderStatus?: string;
-  // Add more fields as needed based on common e-commerce CSV exports
+  customerEmail?: string;
+  financialStatus?: string;
+  fulfillmentStatus?: string;
+  currency?: string;
+  subtotal?: number;
+  shipping?: number;
+  taxes?: number;
+  discountCode?: string;
+  discountAmount?: number;
+  shippingMethod?: string;
+  billingCity?: string;
+  shippingCity?: string;
+  paymentMethod?: string;
+  tags?: string;
 }
 
 export interface ParsedCSVData {
@@ -47,12 +60,12 @@ export function parseCsv(csvString: string): Promise<ParsedCSVData> {
             headers,
             data: [],
             errors: [{
-              type: "FieldMismatch", // Using an existing PapaParse error type
-              code: "HeaderMismatch", // Custom code for our specific error
               message: "No suitable adapter found for the provided CSV headers.",
               row: 0,
               index: 0,
-            }],
+              type: "Delimiter", // Using a valid PapaParse error type
+              code: "UndetectableDelimiter" // Using a valid PapaParse error code
+            } as Papa.ParseError],
             platform: 'Unknown',
           });
           return;
@@ -77,6 +90,20 @@ export function parseCsv(csvString: string): Promise<ParsedCSVData> {
             itemsSold: Number(mappedRow.itemsSold || 0),
             promoCodes: String(mappedRow.promoCodes || ''),
             orderStatus: String(mappedRow.orderStatus || ''),
+            customerEmail: String(mappedRow.customerEmail || ''),
+            financialStatus: String(mappedRow.financialStatus || ''),
+            fulfillmentStatus: String(mappedRow.fulfillmentStatus || ''),
+            currency: String(mappedRow.currency || ''),
+            subtotal: Number(mappedRow.subtotal || 0),
+            shipping: Number(mappedRow.shipping || 0),
+            taxes: Number(mappedRow.taxes || 0),
+            discountCode: String(mappedRow.discountCode || ''),
+            discountAmount: Number(mappedRow.discountAmount || 0),
+            shippingMethod: String(mappedRow.shippingMethod || ''),
+            billingCity: String(mappedRow.billingCity || ''),
+            shippingCity: String(mappedRow.shippingCity || ''),
+            paymentMethod: String(mappedRow.paymentMethod || ''),
+            tags: String(mappedRow.tags || ''),
           };
         });
 

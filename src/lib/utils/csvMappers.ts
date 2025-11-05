@@ -23,7 +23,36 @@ export const woocommerceAdapter: CsvAdapter = {
   },
 };
 
+export const shopifyAdapter: CsvAdapter = {
+  platform: 'Shopify',
+  detector: (headers: string[]) => {
+    return headers.includes('Name') && headers.includes('Email') && headers.includes('Financial Status') && headers.includes('Total');
+  },
+  mapping: {
+    'Name': 'orderId',
+    'Created at': 'orderDate',
+    'Billing Name': 'customerName',
+    'Email': 'customerEmail',
+    'Total': 'totalSales',
+    'Lineitem name': 'products', // Shopify has multiple line items, this will need aggregation or special handling
+    'Lineitem quantity': 'itemsSold', // This will need aggregation or special handling
+    'Discount Code': 'promoCodes',
+    'Financial Status': 'financialStatus',
+    'Fulfillment Status': 'fulfillmentStatus',
+    'Currency': 'currency',
+    'Subtotal': 'subtotal',
+    'Shipping': 'shipping',
+    'Taxes': 'taxes',
+    'Discount Amount': 'discountAmount',
+    'Shipping Method': 'shippingMethod',
+    'Billing City': 'billingCity',
+    'Shipping City': 'shippingCity',
+    'Payment Method': 'paymentMethod',
+    'Tags': 'tags',
+  },
+};
+
 export const adapters: CsvAdapter[] = [
   woocommerceAdapter,
-  // Add other platform adapters here (e.g., shopifyAdapter)
+  shopifyAdapter,
 ];
