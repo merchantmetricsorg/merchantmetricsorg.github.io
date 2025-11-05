@@ -420,33 +420,33 @@
   }
 </script>
 
-<div class="dashboard">
-  <h2>E-commerce Dashboard</h2>
+<div class="card dashboard-container">
+  <h2 class="text-center text-primary">E-commerce Dashboard</h2>
 
   <!-- Overview Category -->
   <section class="category-section">
-    <h3>Overview</h3>
-    <div class="kpi-cards">
+    <h3 class="text-center text-medium">Overview</h3>
+    <div class="grid grid-cols-4 kpi-cards">
       {#if kpis}
         {#each ['totalRevenue', 'totalOrders', 'averageOrderValue'] as kpiName}
           {#if kpis[kpiName as keyof Kpis]}
             {#each kpis[kpiName as keyof Kpis].filter(k => k.period === 'Last 30 Days') as kpi}
-              <div class="kpi-card">
-                <h3>{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
-                <p>
+              <div class="card kpi-card">
+                <h4 class="text-secondary">{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h4>
+                <p class="text-dark">
                   {kpi.value.toFixed(2)}
                   {#if kpiName === 'totalRevenue' || kpiName === 'averageOrderValue'}€{/if}
                   {#if kpiName === 'repeatCustomerRate' || kpiName === 'promoCodeUsageRate'}%{/if}
                 </p>
-                <span class="kpi-period">{kpi.period}</span>
+                <span class="kpi-period text-light">{kpi.period}</span>
                 {#if kpi.change !== undefined && kpi.comparisonPeriod}
-                  <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                  <span class="kpi-change {kpi.isGood ? 'text-accent' : 'text-danger'}">
                     {#if kpi.change > 0}▲{/if}
                     {#if kpi.change < 0}▼{/if}
                     {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
                   </span>
                 {:else if kpi.comparisonPeriod}
-                  <span class="kpi-change">{kpi.comparisonPeriod}</span>
+                  <span class="kpi-change text-light">{kpi.comparisonPeriod}</span>
                 {/if}
               </div>
             {/each}
@@ -454,26 +454,26 @@
         {/each}
         {#if kpis.repeatCustomerRate}
           {#each kpis.repeatCustomerRate.filter(k => k.period === 'Last 90 Days') as kpi}
-            <div class="kpi-card">
-              <h3>Repeat Customer Rate</h3>
-              <p>{kpi.value.toFixed(2)}%</p>
-              <span class="kpi-period">{kpi.period}</span>
+            <div class="card kpi-card">
+              <h4 class="text-secondary">Repeat Customer Rate</h4>
+              <p class="text-dark">{kpi.value.toFixed(2)}%</p>
+              <span class="kpi-period text-light">{kpi.period}</span>
               {#if kpi.change !== undefined && kpi.comparisonPeriod}
-                <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                <span class="kpi-change {kpi.isGood ? 'text-accent' : 'text-danger'}">
                   {#if kpi.change > 0}▲{/if}
                   {#if kpi.change < 0}▼{/if}
                   {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
                 </span>
               {:else if kpi.comparisonPeriod}
-                <span class="kpi-change">{kpi.comparisonPeriod}</span>
+                <span class="kpi-change text-light">{kpi.comparisonPeriod}</span>
               {/if}
             </div>
           {/each}
         {/if}
       {/if}
     </div>
-    <div class="charts-container">
-      <div class="chart-card">
+    <div class="grid grid-cols-2 charts-container">
+      <div class="card chart-card">
         <canvas bind:this={salesOverTimeCanvas30DaysOverview}></canvas>
       </div>
     </div>
@@ -481,28 +481,28 @@
 
   <!-- Sales Category -->
   <section class="category-section">
-    <h3>Sales</h3>
-    <div class="kpi-cards">
+    <h3 class="text-center text-medium">Sales</h3>
+    <div class="grid grid-cols-4 kpi-cards">
       {#if kpis}
         {#each ['totalRevenue', 'averageOrderValue', 'totalOrders', 'promoCodeUsageRate'] as kpiName}
           {#if kpis[kpiName as keyof Kpis]}
             {#each kpis[kpiName as keyof Kpis] as kpi}
-              <div class="kpi-card">
-                <h3>{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h3>
-                <p>
+              <div class="card kpi-card">
+                <h4 class="text-secondary">{kpiName.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</h4>
+                <p class="text-dark">
                   {kpi.value.toFixed(2)}
                   {#if kpiName === 'totalRevenue' || kpiName === 'averageOrderValue'}€{/if}
                   {#if kpiName === 'repeatCustomerRate' || kpiName === 'promoCodeUsageRate'}%{/if}
                 </p>
-                <span class="kpi-period">{kpi.period}</span>
+                <span class="kpi-period text-light">{kpi.period}</span>
                 {#if kpi.change !== undefined && kpi.comparisonPeriod}
-                  <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+                  <span class="kpi-change {kpi.isGood ? 'text-accent' : 'text-danger'}">
                     {#if kpi.change > 0}▲{/if}
                     {#if kpi.change < 0}▼{/if}
                     {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
                   </span>
                 {:else if kpi.comparisonPeriod}
-                  <span class="kpi-change">{kpi.comparisonPeriod}</span>
+                  <span class="kpi-change text-light">{kpi.comparisonPeriod}</span>
                 {/if}
               </div>
             {/each}
@@ -510,17 +510,17 @@
         {/each}
       {/if}
     </div>
-    <div class="charts-container">
-      <div class="chart-card">
+    <div class="grid grid-cols-2 charts-container">
+      <div class="card chart-card">
         <canvas bind:this={salesOverTimeCanvasAll}></canvas>
       </div>
-      <div class="chart-card">
+      <div class="card chart-card">
         <canvas bind:this={salesOverTimeCanvas30Days}></canvas>
       </div>
-      <div class="chart-card">
+      <div class="card chart-card">
         <canvas bind:this={salesOverTimeCanvas365Days}></canvas>
       </div>
-      <div class="chart-card">
+      <div class="card chart-card">
         <canvas bind:this={orderStatusCanvas}></canvas>
       </div>
     </div>
@@ -528,35 +528,35 @@
 
   <!-- Customers Category -->
   <section class="category-section">
-    <h3>Customers</h3>
-    <div class="kpi-cards">
+    <h3 class="text-center text-medium">Customers</h3>
+    <div class="grid grid-cols-4 kpi-cards">
       {#if kpis && kpis.repeatCustomerRate}
         {#each kpis.repeatCustomerRate as kpi}
-          <div class="kpi-card">
-            <h3>Repeat Customer Rate</h3>
-            <p>{kpi.value.toFixed(2)}%</p>
-            <span class="kpi-period">{kpi.period}</span>
+          <div class="card kpi-card">
+            <h4 class="text-secondary">Repeat Customer Rate</h4>
+            <p class="text-dark">{kpi.value.toFixed(2)}%</p>
+            <span class="kpi-period text-light">{kpi.period}</span>
             {#if kpi.change !== undefined && kpi.comparisonPeriod}
-              <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+              <span class="kpi-change {kpi.isGood ? 'text-accent' : 'text-danger'}">
                 {#if kpi.change > 0}▲{/if}
                 {#if kpi.change < 0}▼{/if}
                 {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
               </span>
             {:else if kpi.comparisonPeriod}
-              <span class="kpi-change">{kpi.comparisonPeriod}</span>
+              <span class="kpi-change text-light">{kpi.comparisonPeriod}</span>
             {/if}
           </div>
         {/each}
       {/if}
     </div>
-    <div class="charts-container">
-      <div class="chart-card">
+    <div class="grid grid-cols-2 charts-container">
+      <div class="card chart-card">
         <canvas bind:this={customerTypeCanvasAll}></canvas>
       </div>
-      <div class="chart-card">
+      <div class="card chart-card">
         <canvas bind:this={customerTypeCanvas30Days}></canvas>
       </div>
-      <div class="chart-card">
+      <div class="card chart-card">
         <canvas bind:this={customerTypeCanvas365Days}></canvas>
       </div>
     </div>
@@ -564,77 +564,77 @@
 
   <!-- Products Category -->
   <section class="category-section">
-    <h3>Products</h3>
-    <div class="kpi-cards">
+    <h3 class="text-center text-medium">Products</h3>
+    <div class="grid grid-cols-4 kpi-cards">
       {#if kpis && kpis.averageItemsPerOrder}
         {#each kpis.averageItemsPerOrder as kpi}
-          <div class="kpi-card">
-            <h3>Average Items Per Order</h3>
-            <p>{kpi.value.toFixed(2)}</p>
-            <span class="kpi-period">{kpi.period}</span>
+          <div class="card kpi-card">
+            <h4 class="text-secondary">Average Items Per Order</h4>
+            <p class="text-dark">{kpi.value.toFixed(2)}</p>
+            <span class="kpi-period text-light">{kpi.period}</span>
             {#if kpi.change !== undefined && kpi.comparisonPeriod}
-              <span class="kpi-change {kpi.isGood ? 'good' : 'bad'}">
+              <span class="kpi-change {kpi.isGood ? 'text-accent' : 'text-danger'}">
                 {#if kpi.change > 0}▲{/if}
                 {#if kpi.change < 0}▼{/if}
                 {Math.abs(kpi.change).toFixed(2)}% {kpi.comparisonPeriod}
               </span>
             {:else if kpi.comparisonPeriod}
-              <span class="kpi-change">{kpi.comparisonPeriod}</span>
+              <span class="kpi-change text-light">{kpi.comparisonPeriod}</span>
             {/if}
           </div>
         {/each}
       {/if}
     </div>
-    <div class="charts-container">
-      <div class="chart-card">
+    <div class="grid grid-cols-2 charts-container">
+      <div class="card chart-card">
         <canvas bind:this={topProductsCanvas}></canvas>
       </div>
     </div>
-    <div class="product-insights">
-      <h3>Product Performance Insights (Last 30 Days)</h3>
+    <div class="card product-insights">
+      <h4 class="text-center text-medium">Product Performance Insights (Last 30 Days)</h4>
       {#if productInsights.length > 0}
         <ul>
           {#each productInsights as insight}
-            <li class="insight-item insight-{insight.type}">
+            <li class="alert {insight.type === 'positive' ? 'alert-success' : insight.type === 'negative' ? 'alert-danger' : ''}">
               {insight.insight}
             </li>
           {/each}
         </ul>
       {:else}
-        <p>No product insights available for the last 30 days.</p>
+        <p class="text-center text-light">No product insights available for the last 30 days.</p>
       {/if}
     </div>
-    <div class="sales-anomalies">
-      <h3>Sales Anomaly Detection (Last 90 Days)</h3>
+    <div class="card sales-anomalies">
+      <h4 class="text-center text-medium">Sales Anomaly Detection (Last 90 Days)</h4>
       {#if salesAnomalies.length > 0}
         <ul>
           {#each salesAnomalies as anomaly}
-            <li class="anomaly-item anomaly-{anomaly.type}">
+            <li class="alert {anomaly.type === 'spike' ? 'alert-success' : anomaly.type === 'drop' ? 'alert-danger' : ''}">
               {anomaly.message}
             </li>
           {/each}
         </ul>
       {:else}
-        <p>No significant sales anomalies detected in the last 90 days.</p>
+        <p class="text-center text-light">No significant sales anomalies detected in the last 90 days.</p>
       {/if}
     </div>
   </section>
 
   <!-- Analytics Category -->
   <section class="category-section">
-    <h3>Analytics</h3>
-    <div class="charts-container">
-      <div class="chart-card">
+    <h3 class="text-center text-medium">Analytics</h3>
+    <div class="grid grid-cols-2 charts-container">
+      <div class="card chart-card">
         <canvas bind:this={salesByHourOfDayCanvas}></canvas>
       </div>
-      <div class="chart-card">
+      <div class="card chart-card">
         <canvas bind:this={salesByDayOfWeekCanvas}></canvas>
       </div>
     </div>
-    <div class="cohort-retention">
-      <h3>Cohort Retention Analysis</h3>
+    <div class="card cohort-retention">
+      <h4 class="text-center text-medium">Cohort Retention Analysis</h4>
       {#if !showCohortRetention}
-        <button on:click={generateCohortRetentionAnalysis} class="generate-button">Generate Cohort Retention Analysis</button>
+        <button on:click={generateCohortRetentionAnalysis} class="btn btn-primary">Generate Cohort Retention Analysis</button>
       {:else if cohortRetentionData && cohortRetentionData.cohorts.length > 0}
         <div class="retention-table-container">
           <table class="retention-table">
@@ -665,290 +665,143 @@
           </table>
         </div>
       {:else}
-        <p>No cohort retention data available.</p>
+        <p class="text-center text-light">No cohort retention data available.</p>
       {/if}
     </div>
   </section>
 </div>
 
 <style>
-  .generate-button {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-
-  .generate-button:hover {
-    background-color: #0056b3;
-  }
-  .dashboard {
-    padding: 15px; /* Reduced padding */
-    background-color: #ffffff; /* Lighter background */
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    margin-top: 20px;
-  }
-
-  .dashboard h2 {
-    text-align: center;
-    color: #2c3e50; /* Darker, professional color */
-    margin-bottom: 25px;
-    font-size: 2em;
-    font-weight: 600;
+  /* Scoped styles for Dashboard.svelte */
+  .dashboard-container {
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
   }
 
   .category-section {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-
-  .category-section h3 {
-    text-align: center;
-    color: #007bff;
-    margin-bottom: 20px;
-    font-size: 1.8em;
-    font-weight: 500;
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background-color: var(--color-background-light);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
   }
 
   .kpi-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Slightly smaller min-width */
-    gap: 15px; /* Reduced gap */
-    margin-bottom: 30px; /* Reduced margin */
+    margin-bottom: var(--spacing-lg);
   }
 
   .kpi-card {
-    background-color: #fdfdfd; /* Slightly off-white */
-    padding: 15px; /* Reduced padding */
-    border-radius: 8px;
-    border: 1px solid #e9ecef; /* Subtle border */
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    text-align: center;
-    flex: 1;
-    min-width: 180px;
+    padding: var(--spacing-md);
   }
 
-  .kpi-card h3 {
-    color: #34495e; /* Professional blue-grey */
-    margin-bottom: 8px;
-    font-size: 1.1em;
+  .kpi-card h4 {
+    margin-bottom: var(--spacing-xxs);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 
   .kpi-card p {
-    font-size: 1.8em; /* Slightly smaller font */
-    font-weight: bold;
-    color: #2c3e50; /* Darker color */
-    margin-bottom: 5px;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xxs);
+  }
+
+  .kpi-period {
+    font-size: var(--font-size-sm);
+    display: block;
+    margin-bottom: var(--spacing-xxs);
+  }
+
+  .kpi-change {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
   }
 
   .charts-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Adjusted min-width */
-    gap: 20px; /* Reduced gap */
+    margin-top: var(--spacing-lg);
   }
 
   .chart-card {
-    background-color: #fdfdfd; /* Slightly off-white */
-    padding: 15px; /* Reduced padding */
-    border-radius: 8px;
-    border: 1px solid #e9ecef; /* Subtle border */
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    min-height: 380px; /* Slightly reduced height */
-    position: relative;
-  }
-
-  .chart-card h3 {
-    text-align: center;
-    color: #007bff;
-    margin-bottom: 20px;
+    padding: var(--spacing-md);
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   canvas {
-    max-height: 330px; /* Adjusted max-height */
-    height: 100%; /* Ensure canvas fills the container */
+    max-height: 300px;
+    width: 100% !important;
+    height: 100% !important;
   }
 
-  .kpi-card p {
-    font-size: 2em;
-    font-weight: bold;
-    color: #343a40;
-    margin-bottom: 5px;
+  .product-insights,
+  .sales-anomalies,
+  .cohort-retention {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
   }
 
-  .product-insights {
-    background-color: #fdfdfd;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    margin-bottom: 30px;
+  .product-insights h4,
+  .sales-anomalies h4,
+  .cohort-retention h4 {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-lg);
   }
 
-  .product-insights h3 {
-    text-align: center;
-    color: #34495e;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-  }
-
-  .product-insights ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .product-insights li {
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    line-height: 1.3;
-  }
-
-  .insight-item.insight-positive {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-
-  .insight-item.insight-negative {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-
-  .insight-item.insight-neutral {
-    background-color: #e2e3e5;
-    color: #383d41;
-    border: 1px solid #d6d8db;
-  }
-
-  .sales-anomalies {
-    background-color: #fdfdfd;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    margin-bottom: 30px;
-  }
-
-  .sales-anomalies h3 {
-    text-align: center;
-    color: #34495e;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-  }
-
+  .product-insights ul,
   .sales-anomalies ul {
     list-style: none;
     padding: 0;
   }
 
+  .product-insights li,
   .sales-anomalies li {
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    line-height: 1.3;
-  }
-
-  .anomaly-item.anomaly-spike {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-
-  .anomaly-item.anomaly-drop {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-
-  .kpi-period {
-    font-size: 0.9em;
-    color: #6c757d;
-    display: block;
-    margin-bottom: 5px;
-  }
-
-  .kpi-change {
-    font-size: 0.9em;
-    font-weight: bold;
-  }
-
-  .kpi-change.good {
-    color: #28a745; /* Green for positive change */
-  }
-
-  .kpi-change.bad {
-    color: #dc3545; /* Red for negative change */
-  }
-
-  .cohort-retention {
-    background-color: #fdfdfd;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    margin-top: 20px;
-  }
-
-  .cohort-retention h3 {
-    text-align: center;
-    color: #34495e;
-    margin-bottom: 15px;
-    font-size: 1.2em;
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
   }
 
   .retention-table-container {
     overflow-x: auto;
-    margin-top: 15px;
+    margin-top: var(--spacing-md);
   }
 
   .retention-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9em;
-    min-width: 600px; /* Ensure table is wide enough for content */
+    font-size: var(--font-size-sm);
+    min-width: 600px;
   }
 
   .retention-table th,
   .retention-table td {
-    border: 1px solid #e9ecef;
-    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-xs) var(--spacing-sm);
     text-align: center;
   }
 
   .retention-table thead th {
-    background-color: #f1f3f5;
-    font-weight: bold;
-    color: #495057;
+    background-color: var(--color-background-medium);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-medium);
   }
 
   .retention-table tbody td {
-    background-color: #ffffff;
+    background-color: var(--color-surface);
   }
 
   .retention-table tbody tr:nth-child(even) td {
-    background-color: #f8f9fa;
+    background-color: var(--color-background-light);
   }
 
   .retention-table td.retained {
     background-color: #e6ffed; /* Light green for retained */
-    color: #155724;
+    color: var(--color-accent);
   }
 
   .retention-table td.not-retained {
     background-color: #ffebeb; /* Light red for not retained (if 0%) */
-    color: #721c24;
+    color: var(--color-danger);
   }
 </style>
