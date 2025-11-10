@@ -147,4 +147,10 @@
   .platform-card.disabled h3 {
     color: var(--color-text-light);
   }
+
+  @media (max-width: 767px) {
+    .grid-cols-3 {
+      grid-template-columns: 1fr; /* Stack columns on mobile for feature and platform cards */
+    }
+  }
 </style>

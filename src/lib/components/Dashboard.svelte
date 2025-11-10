@@ -420,7 +420,7 @@
   }
 </script>
 
-<div class="card dashboard-container">
+<div class="dashboard-container">
   <h2 class="text-center text-primary">E-commerce Dashboard</h2>
 
   <!-- Overview Category -->
@@ -680,10 +680,6 @@
 
   .category-section {
     margin-bottom: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background-color: var(--color-background-light);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-md);
   }
 
   .kpi-cards {
@@ -698,11 +694,14 @@
     margin-bottom: var(--spacing-xxs);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
+    margin-top: var(--spacing-xs);
+    margin-bottom: var(--spacing-xxs);
   }
 
   .kpi-card p {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-bold);
+    margin-top: var(--spacing-xs);
     margin-bottom: var(--spacing-xxs);
   }
 
@@ -715,6 +714,10 @@
   .kpi-change {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
   }
 
   .charts-container {
@@ -813,5 +816,21 @@
   .retention-table td.not-retained {
     background-color: #ffebeb; /* Light red for not retained (if 0%) */
     color: var(--color-danger);
+  }
+
+  @media (max-width: 767px) {
+    .kpi-cards {
+      grid-template-columns: repeat(2, 1fr); /* 2 columns on small mobile */
+    }
+
+    .charts-container {
+      grid-template-columns: 1fr; /* Stack charts on mobile */
+    }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-cards {
+      grid-template-columns: 1fr; /* Stack KPIs on very small mobile */
+    }
   }
 </style>
