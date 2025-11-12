@@ -72,7 +72,7 @@
 
 <div class="container">
   <h1 class="text-center">Automated E-commerce Analytics: No Skills Required</h1>
-  <p class="text-center text-medium">Automatically generate a private, powerful BI dashboard from your sales CSV. No business analytics skills needed, no sign-up required, completely free.</p>
+  <p class="text-center text-medium">Automatically generate a private, powerful BI dashboard from your Shopify/WooCommerce sales CSV. No business analytics skills needed, no sign-up required, completely free.</p>
   <section class="my-xl text-center">
     <h2 class="text-primary">Key Features</h2>
     <div class="grid grid-cols-3 my-lg">
